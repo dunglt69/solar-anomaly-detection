@@ -1,0 +1,81 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node modules & build outputs
+node_modules/
+dist/
+dist-ssr/
+.venv/
+.agents/
+
+# SQLite databases & temp files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.bak
+server/data/*.db
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+server/.env
+client/.env
+
+# ONNX model files (large binary)
+*.onnx
+
+# Security tools & scan artifacts
+Security test/
+security-tools/
+security test report/
+*Report*/
+ZAP/
+zap/
+
+# Tools cache
+tools/npm-cache/
+tools/npm/
+
+# Scratch files & temporary scripts
+server/scratch/
+scratch/
+
+# AI/ML training artifacts
+*.pt
+*.pth
+*.pkl
+__pycache__/
+*.pyc
+
+# Editor & OS files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Binary files (DLLs, executables)
+*.dll
+*.exe
+*.bin
+*.pak
+
+# Agent cache files
+.gemini/

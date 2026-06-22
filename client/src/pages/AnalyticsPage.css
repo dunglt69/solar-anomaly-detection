@@ -1,0 +1,323 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Analytics Page — Energy reports, fault trends, system overview
+   ═══════════════════════════════════════════════════════════════════ */
+
+.analytics-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ─── Range selector ─────────────────────────────────────────────── */
+.analytics-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.analytics-range-group {
+  display: flex;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.analytics-range-group button {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-right: 1px solid var(--color-border);
+}
+
+.analytics-range-group button:last-child {
+  border-right: none;
+}
+
+.analytics-range-group button:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.analytics-range-group button.active {
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+.analytics-toolbar .toolbar-info {
+  margin-left: auto;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+}
+
+/* ─── Summary cards ──────────────────────────────────────────────── */
+.analytics-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+.summary-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  transition: border-color 0.2s ease;
+}
+
+.summary-card:hover {
+  border-color: var(--color-border-focus);
+}
+
+.summary-card .card-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary);
+  font-weight: 600;
+}
+
+.summary-card .card-value {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+}
+
+.summary-card .card-value .card-unit {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-left: var(--space-1);
+}
+
+.summary-card .card-value.energy {
+  color: var(--color-brand);
+}
+
+.summary-card .card-value.uptime {
+  color: var(--color-healthy);
+}
+
+.summary-card .card-value.faults {
+  color: var(--color-warning);
+}
+
+.summary-card .card-sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+/* ─── Chart sections ─────────────────────────────────────────────── */
+.analytics-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.analytics-charts.full-width {
+  grid-template-columns: 1fr;
+}
+
+.chart-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.chart-card.span-2 {
+  grid-column: span 2;
+}
+
+.chart-card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.chart-card h3 .chart-icon {
+  font-size: 1.1rem;
+}
+
+.chart-card .chart-subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin-top: -var(--space-2);
+}
+
+/* ─── Fault distribution pie area ────────────────────────────────── */
+.fault-distribution-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.fault-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.fault-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.fault-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.fault-legend-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+
+.fault-legend-count {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* ─── Severity analysis section ──────────────────────────────────── */
+.severity-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.severity-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.severity-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.severity-metric .metric-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.severity-metric .metric-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.severity-bar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--color-bg-tertiary);
+}
+
+.severity-bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+  min-width: 4px;
+}
+
+.severity-legend {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.severity-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  text-transform: capitalize;
+}
+
+.severity-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ─── Empty / Loading ────────────────────────────────────────────── */
+.analytics-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.analytics-empty {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--color-text-tertiary);
+}
+
+.analytics-empty .empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-3);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .analytics-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .analytics-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card.span-2 {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

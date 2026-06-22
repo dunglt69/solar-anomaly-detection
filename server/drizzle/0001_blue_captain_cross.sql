@@ -1,0 +1,1 @@
+ALTER TABLE `sessions` ADD `revoked` integer DEFAULT false NOT NULL;

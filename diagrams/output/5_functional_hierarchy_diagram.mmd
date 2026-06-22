@@ -1,0 +1,55 @@
+graph TD
+  ROOT["EnergiaMind Platform\nNền tảng giám sát NLMT"]:::l0
+
+  ROOT --> M1 & M2 & M3 & M4 & M5 & M6
+
+  M1["1. Authentication\nXác thực & Phân quyền"]:::l1
+  M2["2. Monitoring\nGiám sát thời gian thực"]:::l1
+  M3["3. AI Detection\nPhát hiện bất thường"]:::l1
+  M4["4. Alerting\nCảnh báo & Thông báo"]:::l1
+  M5["5. Ticketing\nQuản lý sự cố"]:::l1
+  M6["6. Administration\nQuản trị hệ thống"]:::l1
+
+  M1 --> M1A["Login / Logout"]:::l2
+  M1 --> M1B["JWT Rotation"]:::l2
+  M1 --> M1C["RBAC Middleware"]:::l2
+
+  M2 --> M2A["Live Dashboard"]:::l2
+  M2 --> M2B["KPI Cards"]:::l2
+  M2 --> M2C["Time-Series Charts"]:::l2
+  M2 --> M2D["Data Export"]:::l2
+
+  M3 --> M3A["Sliding Window Buffer\nBộ đệm sequence 24 bước"]:::l2
+  M3 --> M3B["InceptionTime ONNX\nSuy luận mô hình AI"]:::l2
+  M3 --> M3C["Softmax Classifier\nPhân loại 5 nhóm lỗi"]:::l2
+
+  M4 --> M4A["Generate Alert"]:::l2
+  M4 --> M4B["WS Broadcast"]:::l2
+  M4 --> M4C["Alert History"]:::l2
+
+  M5 --> M5A["Auto-Create Ticket"]:::l2
+  M5 --> M5B["State Machine"]:::l2
+  M5 --> M5C["Comments"]:::l2
+
+  M6 --> M6A["User Management"]:::l2
+  M6 --> M6B["Activity Log"]:::l2
+  M6 --> M6C["System Settings"]:::l2
+  M6 --> M6D["Database Schema\nSơ đồ cơ sở dữ liệu"]:::l2
+
+  M1A --> M1A1["Validate Credentials"]:::l3
+  M1A --> M1A2["Account Lockout"]:::l3
+  M1A --> M1A3["Device Binding Check"]:::l3
+  M2A --> M2A1["WebSocket Stream"]:::l3
+  M2A --> M2A2["REST Query"]:::l3
+  M3C --> M3C1["5-Class Classify"]:::l3
+  M3C --> M3C2["Confidence Score"]:::l3
+  M5B --> M5B1["Status Transition"]:::l3
+  M5B --> M5B2["TTA / TTR Metrics"]:::l3
+  M6A --> M6A1["Profile Management\n(DOB/Emails)"]:::l3
+  M6A --> M6A2["Unlock Account"]:::l3
+  M6A --> M6A3["Reset Device Binding"]:::l3
+
+  classDef l0 fill:#0F172A,stroke:#0F172A,color:white,font-weight:bold
+  classDef l1 fill:#4338CA,stroke:#4338CA,color:white,font-weight:bold
+  classDef l2 fill:#E0E7FF,stroke:#6366F1,stroke-width:1.5px,color:#1E293B
+  classDef l3 fill:#F8FAFC,stroke:#CBD5E1,stroke-width:1px,color:#334155

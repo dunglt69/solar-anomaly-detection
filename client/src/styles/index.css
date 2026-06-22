@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════════════════════
+   EnergiaMind — Global Styles
+   ═══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import './tokens.css';
+
+/* ─── Reset ──────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* ─── Focus ──────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ─── Selection ──────────────────────────────────────────────────── */
+::selection {
+  background-color: var(--color-brand-subtle);
+  color: var(--color-text-primary);
+}
+
+/* ─── Utility: Data values ───────────────────────────────────────── */
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── App Root ───────────────────────────────────────────────────── */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── App Loading Spinner ────────────────────────────────────────── */
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--color-bg-primary, #0a0e1a);
+}
+
+.app-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border, #1e2a3a);
+  border-top-color: var(--color-accent-primary, #3b82f6);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Compact Mode ───────────────────────────────────────────────── */
+.compact-mode {
+  --text-xs: 0.65rem;
+  --text-sm: 0.72rem;
+  --text-base: 0.78rem;
+  --text-lg: 0.88rem;
+  --text-xl: 0.95rem;
+  --text-2xl: 1.1rem;
+  --text-3xl: 1.25rem;
+  --text-4xl: 1.5rem;
+
+  /* Redefine space tokens to scale down all margins/paddings globally */
+  --space-1: 0.15rem;   /* 2.4px instead of 4px */
+  --space-2: 0.3rem;    /* 4.8px instead of 8px */
+  --space-3: 0.45rem;   /* 7.2px instead of 12px */
+  --space-4: 0.6rem;    /* 9.6px instead of 16px */
+  --space-5: 0.8rem;    /* 12.8px instead of 20px */
+  --space-6: 1rem;      /* 16px instead of 24px */
+  --space-8: 1.25rem;   /* 20px instead of 32px */
+  --space-10: 1.5rem;   /* 24px instead of 40px */
+  --space-12: 1.75rem;  /* 28px instead of 48px */
+  --space-16: 2.25rem;  /* 36px instead of 64px */
+}
+
+.compact-mode .dashboard-content {
+  padding: 0.5rem !important;
+  gap: 0.5rem !important;
+}
+
+.compact-mode .dashboard-toolbar {
+  margin-bottom: 0.5rem !important;
+  padding: 0.35rem 0.5rem !important;
+}
+
+.compact-mode .kpi-cards-grid {
+  gap: 0.5rem !important;
+}
+
+.compact-mode .kpi-card {
+  padding: 0.5rem 0.75rem !important;
+  min-height: auto !important;
+}
+
+.compact-mode .kpi-card-value {
+  font-size: 1.35rem !important;
+  margin-top: 0.15rem !important;
+}
+
+.compact-mode .kpi-card-label {
+  font-size: var(--text-xs) !important;
+}
+
+.compact-mode .chart-container {
+  height: 220px !important; /* Make charts shorter in compact mode */
+}
+
+.compact-mode .settings-layout,
+.compact-mode .admin-layout {
+  gap: 0.75rem !important;
+}
+
+.compact-mode .settings-nav,
+.compact-mode .admin-nav {
+  padding: 0.5rem !important;
+}
+
+.compact-mode .settings-nav-btn,
+.compact-mode .admin-nav-btn {
+  padding: 0.4rem 0.6rem !important;
+  font-size: var(--text-sm) !important;
+}
+
+.compact-mode .settings-content,
+.compact-mode .admin-content {
+  padding: 0.75rem !important;
+}
+
+.compact-mode .settings-form,
+.compact-mode .admin-form {
+  gap: 0.5rem !important;
+}
+
+.compact-mode .form-group {
+  margin-bottom: 0.5rem !important;
+}
+
+.compact-mode .form-group label {
+  font-size: var(--text-xs) !important;
+  margin-bottom: 0.15rem !important;
+}
+
+.compact-mode .form-group input,
+.compact-mode .form-group select {
+  padding: 0.35rem 0.5rem !important;
+  font-size: var(--text-sm) !important;
+}
+
+.compact-mode table th,
+.compact-mode table td {
+  padding: 0.3rem 0.45rem !important;
+  font-size: var(--text-sm) !important;
+}
+
+.compact-mode .alert-toast {
+  padding: 0.4rem 0.6rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+

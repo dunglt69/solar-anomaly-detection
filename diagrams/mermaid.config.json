@@ -1,0 +1,18 @@
+{
+  "theme": "default",
+  "themeVariables": {
+    "fontSize": "14px",
+    "fontFamily": "Segoe UI, Inter, sans-serif"
+  },
+  "flowchart": {
+    "nodeSpacing": 30,
+    "rankSpacing": 50,
+    "curve": "basis",
+    "padding": 15,
+    "htmlLabels": true,
+    "useMaxWidth": false
+  },
+  "class": {
+    "useMaxWidth": false
+  }
+}

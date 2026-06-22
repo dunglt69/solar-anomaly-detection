@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1781283757557,
+      "tag": "0000_lazy_iron_fist",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1781283809121,
+      "tag": "0001_blue_captain_cross",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781285315381,
+      "tag": "0002_dapper_mongu",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1781866720096,
+      "tag": "0003_pink_spyke",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1781937295619,
+      "tag": "0004_device_binding",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1782012920000,
+      "tag": "0005_employee_profile",
+      "breakpoints": true
+    }
+  ]
+}

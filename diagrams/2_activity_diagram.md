@@ -1,0 +1,95 @@
+# Activity Diagram — Telemetry Ingestion & InceptionTime AI Anomaly Detection Pipeline
+
+> Full pipeline: Ingestion → Preprocessing → Detection → Classification → Alert → Ticket
+
+```mermaid
+flowchart LR
+  START((("●"))):::startEnd
+
+  subgraph INGEST ["📡 Ingestion"]
+    direction TB
+    A1["Sensor POST\n/api/v1/telemetry"]:::input
+    A2["JWT Auth Check"]:::srv
+    A3{"Schema\nValid?"}:::dec
+    A1 --> A2 --> A3
+  end
+
+  subgraph PREPROCESS ["⚙️ Preprocessing"]
+    direction TB
+    B1["Compute Power Features\n(pdc1, pdc2, pdcTotal)"]:::srv
+    B2["Compute Ratio & Diff Features\n(vdc/idc ratios & diffs)"]:::srv
+    B3["Normalize 13-Feature Vector\n(MinMax Scaler)"]:::srv
+    B4["Push to 24-Step Sliding\nWindow Buffer"]:::srv
+    B5["INSERT Telemetry\ninto SQLite WAL"]:::srv
+    B1 --> B2 --> B3 --> B4 --> B5
+  end
+
+  subgraph DETECT ["🧠 AI Anomaly Detection"]
+    direction TB
+    C1["Update Sliding\nWindow (24 steps)"]:::ai
+    C2["InceptionTime ONNX\nInference Model"]:::ai
+    C3{"Fault\nDetected?"}:::dec
+    C1 --> C2 --> C3
+  end
+
+  subgraph CLASSIFY ["🏷️ Classification"]
+    direction TB
+    D1["InceptionTime\nSoftmax Classifier"]:::ai
+    D2["Confidence\nScore (0-1)"]:::ai
+    D3["Map Severity\ninfo|warning|critical|emergency"]:::alert
+    D1 --> D2 --> D3
+  end
+
+  subgraph ALERT ["🔔 Alert"]
+    direction TB
+    E1["Generate\nAlert Record"]:::alert
+    E2["WebSocket\nPush"]:::alert
+    E3{"≥ Warn?"}:::dec
+    E1 --> E2 --> E3
+  end
+
+  subgraph TICKET ["🎫 Ticketing"]
+    direction TB
+    F1["Auto-Create\nTicket"]:::ticket
+    F2["Assign Operator"]:::ticket
+    F3["Email Notify"]:::ticket
+    F1 --> F2 --> F3
+  end
+
+  ERR["400 Error"]:::error
+  NORMAL["Log Normal"]:::ok
+  STOP1((("◉"))):::startEnd
+  STOP2((("◉"))):::startEnd
+  STOP3((("◉"))):::startEnd
+  STOP4((("◉"))):::startEnd
+
+  %% ═══ MAIN FLOW ═══
+  START --> INGEST
+  A3 -- "✗" --> ERR --> STOP1
+  A3 -- "✓" --> PREPROCESS
+  PREPROCESS --> DETECT
+  C3 -- "No" --> NORMAL --> STOP2
+  C3 -- "Yes" --> CLASSIFY
+  CLASSIFY --> ALERT
+  E3 -- "Info" --> STOP3
+  E3 -- "≥Warn" --> TICKET --> STOP4
+
+
+  %% ═══ STYLES ═══
+  classDef startEnd fill:#1E293B,stroke:#0F172A,color:#F8FAFC,font-weight:bold
+  classDef input fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#1E40AF,font-weight:bold
+  classDef srv fill:#F1F5F9,stroke:#64748B,stroke-width:1.5px,color:#0F172A
+  classDef dec fill:#FFF7ED,stroke:#EA580C,stroke-width:2.5px,color:#9A3412,font-weight:bold
+  classDef ai fill:#D1FAE5,stroke:#059669,stroke-width:2px,color:#064E3B,font-weight:bold
+  classDef alert fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#78350F
+  classDef ticket fill:#EDE9FE,stroke:#7C3AED,stroke-width:2px,color:#5B21B6,font-weight:bold
+  classDef error fill:#FEE2E2,stroke:#DC2626,stroke-width:2px,color:#991B1B
+  classDef ok fill:#F0FDF4,stroke:#22C55E,stroke-width:1.5px,color:#166534
+
+  style INGEST fill:#EFF6FF,stroke:#3B82F6,stroke-width:2px,color:#1E40AF,font-weight:bold
+  style PREPROCESS fill:#F8FAFC,stroke:#94A3B8,stroke-width:2px,color:#334155,font-weight:bold
+  style DETECT fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#065F46,font-weight:bold
+  style CLASSIFY fill:#F0FDF4,stroke:#16A34A,stroke-width:2px,color:#166534,font-weight:bold
+  style ALERT fill:#FFFBEB,stroke:#F59E0B,stroke-width:2px,color:#92400E,font-weight:bold
+  style TICKET fill:#F5F3FF,stroke:#8B5CF6,stroke-width:2px,color:#6D28D9,font-weight:bold
+```

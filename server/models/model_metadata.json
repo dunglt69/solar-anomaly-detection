@@ -1,0 +1,36 @@
+{
+  "model": "InceptionTime",
+  "version": "v1",
+  "features": 13,
+  "window_size": 24,
+  "num_classes": 5,
+  "class_names": {
+    "0": "Normal",
+    "1": "Short-Circuit",
+    "2": "Degradation",
+    "3": "Open Circuit",
+    "4": "Shadowing"
+  },
+  "base_features": [
+    "vdc1",
+    "vdc2",
+    "idc1",
+    "idc2",
+    "irr",
+    "pvt",
+    "pdc1",
+    "pdc2",
+    "pdc_total"
+  ],
+  "ratio_features": [
+    "vdc_ratio",
+    "idc_ratio",
+    "vdc_diff",
+    "idc_diff"
+  ],
+  "focal_gamma": 2.0,
+  "best_macro_f1": 0.9894339420695907,
+  "test_accuracy": 0.997793342837662,
+  "test_macro_f1": 0.9867216208027136,
+  "params": 366789
+}

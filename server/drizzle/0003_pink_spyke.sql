@@ -1,0 +1,1 @@
+ALTER TABLE `blocked_devices` ADD `device_info` text;
