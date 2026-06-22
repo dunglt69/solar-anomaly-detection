@@ -1,0 +1,54 @@
+graph TB
+  subgraph Actors
+    Admin(["Admin User"]):::actor
+    Operator(["Solar Operator"]):::actor
+    Security(["Security Engineer"]):::actor
+    Injector(["Sensor / Data Injector"]):::actor
+  end
+
+  subgraph System
+    useManageUsers(("User & Role\nManagement")):::system
+    useManageSettings(("System Config\n& Settings")):::system
+    useViewActivityLogs(("View System\nActivity Logs")):::system
+    useLogin(("Login / Logout")):::system
+    useViewDashboard(("View Telemetry\nDashboard")):::system
+    useViewAnalytics(("View Analytics\nCharts & Stats")):::system
+    useViewAlerts(("View Alerts")):::system
+    useManageTickets(("Create / Manage\nTickets")):::system
+    useAcknowledgeAlert(("Acknowledge\nAlert")):::system
+    useInjectData(("Ingest Telemetry\nData")):::system
+    useViewDatabaseSchema(("View Database\nSchema (ERD)")):::system
+  end
+
+  %% Admin-only (dashed = exclusive privilege)
+  Admin -. "★ admin" .-> useManageUsers
+  Admin -. "★ admin" .-> useManageSettings
+  Admin -. "★ admin" .-> useViewDatabaseSchema
+  Admin -. "★ admin" .-> useViewActivityLogs
+
+  %% Security Engineer
+  Security -. "★ security_engineer" .-> useViewActivityLogs
+  Security -. "★ security_engineer" .-> useViewDatabaseSchema
+
+  %% Shared access
+  Admin --- useLogin
+  Admin --- useViewDashboard
+  Admin --- useViewAnalytics
+  Admin --- useViewAlerts
+  Admin --- useManageTickets
+  Admin --- useAcknowledgeAlert
+
+  Operator --- useLogin
+  Operator --- useViewDashboard
+  Operator --- useViewAnalytics
+  Operator --- useViewAlerts
+  Operator --- useManageTickets
+  Operator --- useAcknowledgeAlert
+
+  Security --- useLogin
+
+  %% System actor
+  Injector --- useInjectData
+
+  classDef actor fill:#fdf4ff,stroke:#e879f9,stroke-width:2px,color:#86198f,font-weight:bold
+  classDef system fill:#eef2ff,stroke:#818cf8,stroke-width:2px,color:#4338ca

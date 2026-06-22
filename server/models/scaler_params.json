@@ -1,0 +1,95 @@
+{
+  "features": [
+    "vdc1",
+    "vdc2",
+    "idc1",
+    "idc2",
+    "irr",
+    "pvt",
+    "pdc1",
+    "pdc2",
+    "pdc_total",
+    "vdc_ratio",
+    "idc_ratio",
+    "vdc_diff",
+    "idc_diff"
+  ],
+  "params": {
+    "vdc1": {
+      "min": 0.3799,
+      "max": 363.974,
+      "range": 363.59409999999997
+    },
+    "vdc2": {
+      "min": 0.3164,
+      "max": 368.749,
+      "range": 368.43260000000004
+    },
+    "idc1": {
+      "min": 0.0418,
+      "max": 9.6549,
+      "range": 9.6131
+    },
+    "idc2": {
+      "min": 0.0046,
+      "max": 9.4987,
+      "range": 9.4941
+    },
+    "irr": {
+      "min": 0.0,
+      "max": 1085.92,
+      "range": 1085.92
+    },
+    "pvt": {
+      "min": -1.6543,
+      "max": 60.8215,
+      "range": 62.4758
+    },
+    "pdc1": {
+      "min": 0.0188727,
+      "max": 2495.5455294,
+      "range": 2495.5266567
+    },
+    "pdc2": {
+      "min": 0.0016214399999999998,
+      "max": 2473.8006,
+      "range": 2473.7989785600003
+    },
+    "pdc_total": {
+      "min": 0.0215213,
+      "max": 4944.5232488,
+      "range": 4944.5017275
+    },
+    "vdc_ratio": {
+      "min": 0.0028810133704487905,
+      "max": 5.0,
+      "range": 4.997118986629551
+    },
+    "idc_ratio": {
+      "min": 0.01073780142153229,
+      "max": 5.0,
+      "range": 4.9892621985784675
+    },
+    "vdc_diff": {
+      "min": 0.0,
+      "max": 274.4697,
+      "range": 274.4697
+    },
+    "idc_diff": {
+      "min": 0.0,
+      "max": 9.5734,
+      "range": 9.5734
+    }
+  },
+  "scaler_type": "minmax",
+  "window_size": 24,
+  "num_classes": 5,
+  "num_features": 13,
+  "class_names": {
+    "0": "Normal",
+    "1": "Short-Circuit",
+    "2": "Degradation",
+    "3": "Open Circuit",
+    "4": "Shadowing"
+  }
+}

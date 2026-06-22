@@ -1,0 +1,38 @@
+# cloudflared-config.example.yml
+# ------------------------------------------------------------------------------
+# Template configuration for exposing the EnergiaMind platform securely using a Cloudflare Tunnel.
+# This allows external access (e.g. for academic presentations or CV demo showcases)
+# without opening public ports on your local router.
+#
+# Instructions:
+# 1. Download and install cloudflared on your machine.
+# 2. Login and create a tunnel:
+#    cloudflared tunnel login
+#    cloudflared tunnel create energiamind-tunnel
+# 3. Rename this file to 'config.yml', fill in your Tunnel UUID, and update the paths.
+# 4. Map your DNS route:
+#    cloudflared tunnel route dns energiamind-tunnel energiamind.yourdomain.com
+# 5. Run the tunnel:
+#    cloudflared tunnel --config config.yml run energiamind-tunnel
+# ------------------------------------------------------------------------------
+
+tunnel: YOUR_TUNNEL_UUID_HERE
+credentials-file: C:\Users\YOUR_USER\.cloudflared\YOUR_TUNNEL_UUID_HERE.json
+
+ingress:
+  # Route REST API requests to Fastify 5 Backend
+  - hostname: energiamind.yourdomain.com
+    path: ^/api
+    service: http://localhost:3000
+
+  # Route WebSocket connections to Fastify 5 Backend
+  - hostname: energiamind.yourdomain.com
+    path: ^/ws
+    service: http://localhost:3000
+
+  # Route all other traffic to the React Frontend (Vite dev server or production preview)
+  - hostname: energiamind.yourdomain.com
+    service: http://localhost:5173
+
+  # Catch-all rule for any other requests (returns 404)
+  - service: http_status:404

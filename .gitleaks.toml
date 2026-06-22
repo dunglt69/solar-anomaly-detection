@@ -1,0 +1,6 @@
+[allowlist]
+description = "Allowlist for test configuration and load test scripts containing mock keys"
+paths = [
+    '''server/vitest.config.ts''',
+    '''server/tools/load-test.ts'''
+]

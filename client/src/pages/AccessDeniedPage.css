@@ -1,0 +1,210 @@
+.access-denied-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0f;
+  color: #e4e4e7;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background grid */
+.access-denied-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(239, 68, 68, 0.03) 1px, transparent 1px),
+    linear-gradient(rgba(239, 68, 68, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridPulse 4s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* Red scanning line */
+.access-denied-page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ef4444, transparent);
+  animation: scanLine 3s linear infinite;
+}
+
+@keyframes scanLine {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+.access-denied-container {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  width: 100%;
+  padding: 48px 40px;
+  background: rgba(15, 15, 23, 0.95);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 16px;
+  box-shadow:
+    0 0 40px rgba(239, 68, 68, 0.1),
+    0 0 80px rgba(239, 68, 68, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+
+.access-denied-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 20px 8px rgba(239, 68, 68, 0.15); }
+}
+
+.access-denied-icon svg {
+  width: 36px;
+  height: 36px;
+  color: #ef4444;
+}
+
+.access-denied-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ef4444;
+  margin: 0 0 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.access-denied-subtitle {
+  font-size: 15px;
+  color: #a1a1aa;
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+
+.access-denied-details {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.access-denied-details h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 12px;
+}
+
+.access-denied-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 13px;
+}
+
+.access-denied-detail-row:last-child {
+  border-bottom: none;
+}
+
+.access-denied-detail-label {
+  color: #71717a;
+  font-weight: 500;
+}
+
+.access-denied-detail-value {
+  color: #d4d4d8;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+}
+
+.access-denied-legal {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.access-denied-legal p {
+  font-size: 11px;
+  color: #71717a;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.access-denied-legal strong {
+  color: #a1a1aa;
+}
+
+.access-denied-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.access-denied-warning svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: #f59e0b;
+  margin-top: 1px;
+}
+
+.access-denied-warning p {
+  font-size: 12px;
+  color: #d4d4d8;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.access-denied-footer {
+  font-size: 11px;
+  color: #52525b;
+  margin-top: 20px;
+  line-height: 1.5;
+}
+
+.access-denied-footer a {
+  color: #71717a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.access-denied-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #3f3f46;
+  margin-top: 8px;
+}

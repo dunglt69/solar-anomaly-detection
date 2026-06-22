@@ -1,0 +1,29 @@
+{
+  "model": "LSTMFaultClassifier",
+  "version": 3,
+  "status": "DEPRECATED — replaced by InceptionTime",
+  "note": "LSTM failed to converge (11.66% accuracy). Use inception_fault_classifier.onnx instead.",
+  "num_features": 9,
+  "window_size": 24,
+  "num_classes": 5,
+  "feature_names": ["vdc1", "vdc2", "idc1", "idc2", "irr", "pvt", "pdc1", "pdc2", "pdc_total"],
+  "class_names": {
+    "0": "Normal",
+    "1": "Short-Circuit",
+    "2": "Degradation",
+    "3": "Open Circuit",
+    "4": "Shadowing"
+  },
+  "test_accuracy": 0.11662892267874474,
+  "macro_f1": 0.05307645005242286,
+  "weighted_f1": 0.032615499403347056,
+  "device": "cuda",
+  "training_config": {
+    "batch_size": 256,
+    "learning_rate": 0.002,
+    "max_epochs": 40,
+    "sampler": "WeightedRandomSampler",
+    "loss": "CrossEntropyLoss+label_smoothing",
+    "scheduler": "OneCycleLR"
+  }
+}

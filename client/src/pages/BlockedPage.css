@@ -1,0 +1,150 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Blocked Page — Access Denied UI
+   ═══════════════════════════════════════════════════════════════════ */
+
+.blocked-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Red-tinted ambient glow */
+.blocked-ambient {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(239, 68, 68, 0.06) 0%,
+    rgba(239, 68, 68, 0.02) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.blocked-card {
+  width: 100%;
+  max-width: 460px;
+  padding: var(--space-10);
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+/* ─── Icon ─────────────────────────────────────────────────────── */
+.blocked-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-xl);
+  background: var(--color-critical-bg);
+  color: var(--color-critical);
+  margin-bottom: var(--space-5);
+  animation: blockedPulse 2s ease-in-out infinite;
+}
+
+@keyframes blockedPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.15); }
+  50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+}
+
+/* ─── Heading ──────────────────────────────────────────────────── */
+.blocked-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-2);
+}
+
+.blocked-subtitle {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-6);
+}
+
+/* ─── Reason Badge ─────────────────────────────────────────────── */
+.blocked-reason {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-critical);
+  margin-bottom: var(--space-4);
+}
+
+/* ─── Expiry ───────────────────────────────────────────────────── */
+.blocked-expiry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-warning-bg);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-warning);
+  margin-bottom: var(--space-6);
+}
+
+.blocked-permanent {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-6);
+}
+
+/* ─── Divider ──────────────────────────────────────────────────── */
+.blocked-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-border-subtle);
+  margin-bottom: var(--space-5);
+}
+
+/* ─── Contact ──────────────────────────────────────────────────── */
+.blocked-contact {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  line-height: var(--leading-relaxed);
+}
+
+.blocked-contact a {
+  color: var(--color-brand);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+  transition: color var(--transition-fast);
+}
+
+.blocked-contact a:hover {
+  color: var(--color-brand-hover);
+}
+
+/* ─── Footer ───────────────────────────────────────────────────── */
+.blocked-footer {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.blocked-footer p {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
