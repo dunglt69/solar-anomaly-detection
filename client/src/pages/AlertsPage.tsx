@@ -243,7 +243,7 @@ function AlertDetailModal({ alert, onClose }: {
               <div>
                 <div className="diagnostic-item-label">Detection</div>
                 <div className="diagnostic-item-value" style={{ textTransform: 'capitalize' }}>
-                  {(alert.detectionLayer === 'ai' || alert.detectionLayer === 'lstm') ? 'AI (InceptionTime)' : 'Rule-Based'}
+                  {alert.detectionLayer === 'ai' ? 'AI (InceptionTime)' : 'Rule-Based'}
                 </div>
               </div>
             </div>
@@ -558,8 +558,8 @@ export default function AlertsPage() {
                     <span className={`severity-badge ${alert.severity}`}>
                       {alert.severity}
                     </span>
-                    <span className={`detection-badge detection-badge--${(alert.detectionLayer === 'ai' || alert.detectionLayer === 'lstm') ? 'ai' : 'rule'}`}>
-                      {(alert.detectionLayer === 'ai' || alert.detectionLayer === 'lstm') ? '🧠 AI' : '📐 Rule-Based'}
+                    <span className={`detection-badge detection-badge--${alert.detectionLayer === 'ai' ? 'ai' : 'rule'}`}>
+                      {alert.detectionLayer === 'ai' ? '🧠 AI' : '📐 Rule-Based'}
                     </span>
                     <span className="alert-card-confidence" title={`AI confidence: ${(alert.confidence * 100).toFixed(1)}%`}>
                       <span className="confidence-bar" style={{ width: `${alert.confidence * 100}%` }} />

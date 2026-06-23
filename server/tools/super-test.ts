@@ -1,4 +1,4 @@
-import { aiService } from '../src/services/lstm.service.js';
+import { aiService } from '../src/services/ai.service.js';
 import { detectionService } from '../src/services/detection.service.js';
 import { db } from '../src/db/index.js';
 import { tickets, alerts } from '../src/db/schema.js';

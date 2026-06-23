@@ -7,7 +7,7 @@
  * Simulates the real-world data path:
  *   Solar Panel → Modbus RS485 → Edge Gateway Buffer → HTTP POST → Server
  * 
- * The server's 3-layer AI pipeline (Z-score -> Domain Rules -> LSTM)
+ * The server's 3-layer AI pipeline (Z-score -> Domain Rules -> InceptionTime)
  * detects faults from raw readings. Ground-truth labels are kept locally
  * for validation comparison only.
  * 

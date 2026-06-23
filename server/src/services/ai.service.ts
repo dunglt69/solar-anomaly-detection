@@ -112,16 +112,11 @@ class AIInferenceService {
   }
 
   async initialize(): Promise<boolean> {
-    // Try InceptionTime first, fallback to legacy model
     const inceptionPath = join(MODELS_DIR, 'inception_fault_classifier.onnx');
-    const lstmPath = join(MODELS_DIR, 'lstm_fault_classifier.onnx');
     const scalerPath = join(MODELS_DIR, 'scaler_params.json');
 
-    const onnxPath = existsSync(inceptionPath) ? inceptionPath : lstmPath;
-    const modelName = existsSync(inceptionPath) ? 'InceptionTime' : 'LSTM';
-
-    if (!existsSync(onnxPath)) {
-      console.warn(`[AI] No model found — running in rules-only mode`);
+    if (!existsSync(inceptionPath)) {
+      console.warn(`[AI] InceptionTime model not found at ${inceptionPath} — running in rules-only mode`);
       return false;
     }
 
@@ -135,10 +130,10 @@ class AIInferenceService {
       console.log(`[AI] Scaler loaded: ${this.scaler!.features.length} features, ` +
         `window=${this.scaler!.window_size}, type=${this.scaler!.scaler_type || 'zscore'}`);
 
-      this.session = await ort.InferenceSession.create(onnxPath, {
+      this.session = await ort.InferenceSession.create(inceptionPath, {
         executionProviders: ['cpu'],
       });
-      console.log(`[AI] ${modelName} ONNX model loaded successfully`);
+      console.log(`[AI] InceptionTime ONNX model loaded successfully`);
 
       this.loaded = true;
       return true;
