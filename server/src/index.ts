@@ -100,8 +100,7 @@ async function main() {
       if (req.headers['x-bypass-rate-limit'] === 'super-secret-scanner-key') {
         return true;
       }
-      // Only exempt WebSocket upgrade requests from rate limiting
-      return req.url.startsWith('/ws');
+      return false;
     },
     errorResponseBuilder: (_req, context) => ({
       statusCode: 429,
@@ -217,7 +216,7 @@ async function main() {
     }
 
     await app.listen({ port: PORT, host: HOST });
-    app.log.info(`EnergiaMind API running at http://${HOST}:${PORT}`);
+    app.log.info(`EnergiaMind API running at ${HOST}:${PORT}`);
 
     // ─── Optional Modbus TCP Master ──────────────────────────────────
     if (process.env['MODBUS_ENABLED'] === '1') {

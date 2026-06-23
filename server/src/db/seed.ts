@@ -61,7 +61,7 @@ export async function seed() {
     }).onConflictDoNothing();
   }
 
-  console.log(`Seeded admin user: ${ADMIN_USERNAME} (EM-0001, password set from environment)`);
+  console.log('Seeded admin user: EM-0001 (password set from environment)');
   console.log('Seeded default system config.');
 }
 
