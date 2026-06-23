@@ -79,3 +79,10 @@ coverage/
 
 # Agent cache files
 .gemini/
+
+# Microsoft Office temp & documents
+*.docx
+*.doc
+~$*
+*.tmp
+
