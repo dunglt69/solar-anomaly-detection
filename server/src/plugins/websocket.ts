@@ -32,9 +32,17 @@ async function wsPlugin(fastify: FastifyInstance) {
   setBroadcast(wsBroadcast);
 
   // WebSocket route — requires ?token=<JWT> for authentication
-  fastify.get('/ws/telemetry', { websocket: true }, async (socket, request) => {
+  fastify.get('/ws/telemetry', { 
+    websocket: true,
+    config: {
+      rateLimit: {
+        max: 30,
+        timeWindow: '1 minute'
+      }
+    }
+  }, async (socket, request) => {
     // BUG-009: Support token via subprotocol (bearer-<token>) in addition to query param
-    const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+    const url = new URL(request.url, `https://${request.headers.host || 'localhost'}`);
     const protocol = request.headers['sec-websocket-protocol'] as string | undefined;
     const token = url.searchParams.get('token') || (protocol?.startsWith('bearer-') ? protocol.slice(7) : null);
 
