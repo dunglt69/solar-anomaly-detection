@@ -5,10 +5,12 @@ const getApiBase = () => {
   }
   if (typeof window !== 'undefined') {
     if (window.location.port === '5173') {
+      // devskim: ignore DS137138 - Local development uses plain HTTP
       return `http://${window.location.hostname}:3000`;
     }
     return window.location.origin;
   }
+  // devskim: ignore DS137138 - Local development uses plain HTTP
   return 'http://localhost:3000';
 };
 
