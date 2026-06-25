@@ -16,12 +16,12 @@ EnergiaMind is a decoupled, injection-agnostic solar monitoring platform. The ar
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     BROWSER (Vite + React 19)                    │
-│  ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐  │
-│  │  Dashboard  │ │ Tickets  │ │  Admin   │ │    Analytics     │  │
-│  │  (ECharts)  │ │ (Kanban) │ │ (Users)  │ │  (Charts/Stats)  │  │
-│  └──────┬──────┘ └────┬─────┘ └────┬─────┘ └───────┬──────────┘  │
-│         └──────────────┴────────────┴───────────────┘            │
+│                     BROWSER (Vite + React 19)                   │
+│  ┌───────────┐ ┌──────────────┐ ┌─────────┐ ┌────────────────┐  │
+│  │ Dashboard │ │Alerts/Tickets│ │  Admin  │ │   Analytics    │  │
+│  │ (ECharts) │ │  (Unified)   │ │ (Users) │ │ (Charts/Stats) │  │
+│  └─────┬─────┘ └──────┬───────┘ └────┬────┘ └───────┬────────┘  │
+│        └──────────────┴──────────────┴──────────────┘           │
 │                           Zustand Store                          │
 │                     WebSocket ↕ REST (fetch)                     │
 └─────────────────────────┬───────────────────────────────────────┘
@@ -118,7 +118,7 @@ Client: WebSocket message → Zustand store update → ECharts re-render
 
 - `telemetry(timestamp)` — Range queries
 - `alerts(timestamp, severity)` — Alert history
-- `tickets(status, assignee_id)` — Kanban queries
+- `tickets(status, assignee_id)` — Incident ticket queries
 - `activity_log(timestamp, actor_id)` — Audit search
 
 ---
@@ -140,11 +140,9 @@ App
 │   │       │   ├── PowerChart (bar & line)
 │   │       │   ├── VoltageCurrentChart (bar, dual-axis)
 │   │       │   └── TemperatureChart (bar, dual-axis)
-│   │       ├── /tickets → TicketsPage
-│   │       │   ├── KanbanBoard / TableView (toggle)
-│   │       │   └── TicketDetailModal
-│   │       ├── /alerts → AlertsPage
-│   │       │   └── AlertHistoryTable (filterable)
+│   │       ├── /alerts → AlertsPage (Unified Alert-Ticket Flow)
+│   │       │   ├── AlertHistoryTable (filterable)
+│   │       │   └── AlertDetailModal (with linked incident tickets & comments)
 │   │       ├── /analytics → AnalyticsPage
 │   │       │   ├── IVCurveChart
 │   │       │   ├── EnergyHeatmap
@@ -263,7 +261,7 @@ The platform includes **138 test cases** running via Vitest, covering:
 - **Employee Device Binding**: First-login auto-registration, validation of hardware signature components, minor hardware drift auto-updates, and admin-triggered device resets.
 - **Access Control**: Role-based access validation, account lockout, and admin-triggered unlock actions.
 - **Ingestion & AI Pipeline**: Telemetry parsing, feature scaling, InceptionTime ONNX inference, and auto-ticketing logic (ai.service.ts).
-- **Kanban Tickets**: State machine transitions (open → resolved/escalated → closed), assignment rules, and thread comments.
+- **Incident Tickets**: State machine transitions (open → resolved/escalated → closed), assignment rules, and thread comments.
 
 ### 8.2 Load Test Benchmarks (4,000+ RPS)
 Load testing using virtual users (VUs) executed under Node 20 / Windows 11 environment yields the following performance profiles:
