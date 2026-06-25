@@ -67,8 +67,15 @@ export async function seed() {
   }
 
   if (!ADMIN_PASSWORD) {
-    console.log(`⚠️  Generated admin password: ${finalPassword}`);
-    console.log('   Please change this immediately and set ADMIN_PASSWORD in .env');
+    if (process.env['NODE_ENV'] === 'production') {
+      throw new Error('ADMIN_PASSWORD environment variable is required in production');
+    }
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const credsPath = path.resolve(process.cwd(), '.admin_credentials.tmp');
+    fs.writeFileSync(credsPath, `Username: ${ADMIN_USERNAME}\nPassword: ${finalPassword}\n`, 'utf-8');
+    console.log(`⚠️  Generated admin password has been written to: ${credsPath}`);
+    console.log('   Please check this file and delete it after logging in.');
   }
   console.log('Seeded admin user: EM-0001');
   console.log('Seeded default system config.');
