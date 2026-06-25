@@ -51,13 +51,13 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
     },
   }, async (request, reply) => {
     const result = await ingestTelemetry(request.body);
-    console.log(`[Telemetry Ingest] body length: ${request.body.length}, broadcastFn exists: ${!!broadcastFn}`);
+    fastify.log.debug(`[Telemetry Ingest] body length: ${request.body.length}, broadcastFn exists: ${!!broadcastFn}`);
 
 
-    // ─── Run AI Detection Pipeline for EVERY reading ────────────────
-    // Whether batch (many readings) or single, each reading goes through
-    // the 3-layer AI detection pipeline (Z-score → Rules → InceptionTime).
-    // This ensures confidence scores are always real, never faked.
+    // Run AI detection pipeline for each reading.
+    // The detection service internally applies Z-score, domain rules, and InceptionTime.
+    const runAsync = request.body.length > 100;
+    const processReadings = async () => {
     for (const point of request.body) {
       const pdc1 = point.pdc1 ?? point.vdc1 * point.idc1;
       const pdc2 = point.pdc2 ?? point.vdc2 * point.idc2;
@@ -117,6 +117,13 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
         });
       }
     }
+    };
+
+    if (runAsync) {
+      processReadings().catch(err => fastify.log.error(err, 'Async detection pipeline error'));
+    } else {
+      await processReadings();
+    }
 
     return reply.send(result);
   });
@@ -133,7 +140,11 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
   fastify.get<{ Querystring: { n?: string } }>('/api/v1/telemetry/latest', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
-    const n = Math.min(Number(request.query.n) || 200, 86400);
+    const raw = Number(request.query.n);
+    if (raw <= 0 || !Number.isFinite(raw)) {
+      return reply.status(400).send({ error: 'Parameter n must be a positive number' });
+    }
+    const n = Math.min(raw || 200, 10000);
     const rows = await getLatestTelemetry(n);
     return reply.send({ data: rows.reverse(), count: rows.length });
   });

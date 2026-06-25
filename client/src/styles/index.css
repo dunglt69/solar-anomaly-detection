@@ -127,6 +127,17 @@ img, svg {
   to { transform: rotate(360deg); }
 }
 
+/* ─── Suspense Page Loading ─────────────────────────────────────── */
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: var(--text-sm, 0.875rem);
+}
+
 /* ─── Compact Mode ───────────────────────────────────────────────── */
 .compact-mode {
   --text-xs: 0.65rem;

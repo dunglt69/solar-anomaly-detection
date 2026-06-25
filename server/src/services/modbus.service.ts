@@ -114,7 +114,7 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
   let pollCount = 0;
   let errorCount = 0;
 
-  setInterval(async () => {
+  const pollIntervalId = setInterval(async () => {
     const isConnected = await ensureConnected();
     if (!isConnected) {
       errorCount++;
@@ -204,7 +204,21 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
     }
   }, config.interval);
 
+  stopModbusPoller = () => {
+    clearInterval(pollIntervalId);
+    try { client.close(() => {}); } catch (_) {}
+  };
+
   if (!initialConnected) {
-    throw new Error(`[Modbus] Failed to connect after 10 attempts`);
+    throw new Error(`[Modbus] Failed to connect on initial attempt`);
+  }
+}
+
+let stopModbusPoller: (() => void) | null = null;
+
+export function stopModbus() {
+  if (stopModbusPoller) {
+    stopModbusPoller();
+    stopModbusPoller = null;
   }
 }

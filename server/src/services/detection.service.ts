@@ -50,8 +50,8 @@ class DetectionService {
       faultDetected: false,
       faultLabel: 0,
       faultName: 'Normal',
-      confidence: 1.0,
-      detectionLayer: 'ai',
+      confidence: 0.0,
+      detectionLayer: 'none',
       details: `Normal operation (${statusText})`,
     };
   }

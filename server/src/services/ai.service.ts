@@ -84,7 +84,7 @@ function addRatioFeatures(baseFeatures: number[]): number[] {
   const idc1 = baseFeatures[2]!;
   const idc2 = baseFeatures[3]!;
 
-  const thresh = 0.01;
+  const thresh = 1e-6;
 
   // Safe ratio: only compute where denominator > threshold, else 1.0
   let vdcRatio = vdc2 > thresh ? vdc1 / vdc2 : 1.0;

@@ -29,8 +29,8 @@
     "idc_diff"
   ],
   "focal_gamma": 2.0,
-  "best_macro_f1": 0.9894339420695907,
-  "test_accuracy": 0.997793342837662,
-  "test_macro_f1": 0.9867216208027136,
+  "best_macro_f1": 0.990090587889026,
+  "test_accuracy": 0.9979730986177401,
+  "test_macro_f1": 0.9882687588761125,
   "params": 366789
 }

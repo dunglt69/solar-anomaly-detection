@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
+import { authFetch } from '../lib/authFetch';
 import Chart from '../components/charts/Chart';
 import { CHART_THEME } from '../lib/chartConstants';
 import type { EChartsOption } from 'echarts';
@@ -95,10 +96,10 @@ export default function AnalyticsPage() {
 
     try {
       const [energyRes, faultRes, summaryRes, hourlyRes] = await Promise.all([
-        fetch(`${API}/api/v1/analytics/daily-energy?${params}`, { headers }),
-        fetch(`${API}/api/v1/analytics/fault-trend?${params}`, { headers }),
-        fetch(`${API}/api/v1/analytics/summary?${params}`, { headers }),
-        fetch(`${API}/api/v1/analytics/hourly-profile?date=${new Date().toISOString().split('T')[0]}`, { headers }),
+        authFetch(`${API}/api/v1/analytics/daily-energy?${params}`, { headers }),
+        authFetch(`${API}/api/v1/analytics/fault-trend?${params}`, { headers }),
+        authFetch(`${API}/api/v1/analytics/summary?${params}`, { headers }),
+        authFetch(`${API}/api/v1/analytics/hourly-profile?date=${new Date().toISOString().split('T')[0]}`, { headers }),
       ]);
 
       if (energyRes.ok) {

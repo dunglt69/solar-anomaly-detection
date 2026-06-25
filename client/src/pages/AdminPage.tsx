@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
+import { authFetch, apiUrl } from '../lib/authFetch';
 import { formatTime, formatLastSeen } from '../lib/formatTime';
 import './AdminPage.css';
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1`;
 
 function getHeaders() {
-  const token = useAuthStore.getState().accessToken;
   return {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -91,7 +90,7 @@ function UsersTab() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${API}/users`, { headers: getHeaders() });
+      const res = await authFetch(`${API}/users`, { headers: getHeaders() });
       if (res.ok) {
         const json = await res.json();
         setUsers(json.data);
@@ -117,7 +116,7 @@ function UsersTab() {
     setCreating(true);
     setMessage(null);
     try {
-      const res = await fetch(`${API}/users`, {
+      const res = await authFetch(`${API}/users`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(form),
@@ -157,7 +156,7 @@ function UsersTab() {
     }
 
     try {
-      const res = await fetch(`${API}/users/${editingUser.id}`, {
+      const res = await authFetch(`${API}/users/${editingUser.id}`, {
         method: 'PATCH',
         headers: getHeaders(),
         body: JSON.stringify(payload),
@@ -184,7 +183,7 @@ function UsersTab() {
   const handleDeleteUser = async (userId: string) => {
     if (!window.confirm('WARNING: Are you sure you want to permanently delete this employee account? This action cannot be undone.')) return;
     try {
-      const res = await fetch(`${API}/users/${userId}`, {
+      const res = await authFetch(`${API}/users/${userId}`, {
         method: 'DELETE',
         headers: getHeaders(),
       });
@@ -204,7 +203,7 @@ function UsersTab() {
   const handleResetDevice = async (userId: string) => {
     if (!window.confirm('Are you sure you want to reset device binding for this employee? The next login will bind their new device.')) return;
     try {
-      const res = await fetch(`${API}/admin/device-bindings/${userId}/reset`, {
+      const res = await authFetch(`${API}/admin/device-bindings/${userId}/reset`, {
         method: 'POST',
         headers: getHeaders(),
       });
@@ -222,7 +221,7 @@ function UsersTab() {
   const handleUnlock = async (userId: string) => {
     if (!window.confirm('Are you sure you want to unlock this employee account?')) return;
     try {
-      const res = await fetch(`${API}/admin/users/${userId}/unlock`, {
+      const res = await authFetch(`${API}/admin/users/${userId}/unlock`, {
         method: 'POST',
         headers: getHeaders(),
       });
@@ -450,7 +449,7 @@ function ActivityLogTab() {
     let active = true;
     const loadInitial = async () => {
       try {
-        const res = await fetch(`${API}/activity-log?limit=50&offset=0`, { headers: getHeaders() });
+        const res = await authFetch(`${API}/activity-log?limit=50&offset=0`, { headers: getHeaders() });
         if (res.ok && active) {
           const json = await res.json();
           setLogs(json.data);
@@ -474,7 +473,7 @@ function ActivityLogTab() {
     setLoadingMore(true);
     try {
       const currentOffset = logs.length;
-      const res = await fetch(`${API}/activity-log?limit=50&offset=${currentOffset}`, { headers: getHeaders() });
+      const res = await authFetch(`${API}/activity-log?limit=50&offset=${currentOffset}`, { headers: getHeaders() });
       if (res.ok) {
         const json = await res.json();
         setLogs(prev => [...prev, ...json.data]);

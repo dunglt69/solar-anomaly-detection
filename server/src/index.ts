@@ -96,8 +96,8 @@ async function main() {
       if (ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') {
         return true;
       }
-      // Allow bypass for the automated security scanner
-      if (req.headers['x-bypass-rate-limit'] === 'super-secret-scanner-key') {
+      const bypassKey = process.env['RATE_LIMIT_BYPASS_KEY'];
+      if (bypassKey && req.headers['x-bypass-rate-limit'] === bypassKey) {
         return true;
       }
       return false;
@@ -123,11 +123,25 @@ async function main() {
   });
 
   await app.register(cookie, {
-    secret: process.env['COOKIE_SECRET'] || 'energiamind-cookie-secret',
+    secret: process.env['COOKIE_SECRET'] || 'dev-cookie-secret-' + Date.now(),
   });
 
   await app.register(authPlugin);
   await app.register(wsPlugin);
+
+  app.addHook('onReady', async () => {
+    const { cleanupExpiredSessions } = await import('./services/auth.service.js');
+    const cleanup = async () => {
+      try {
+        const count = await cleanupExpiredSessions();
+        if (count > 0) app.log.info(`Cleaned up ${count} expired session(s)`);
+      } catch (err) {
+        app.log.error(err, 'Session cleanup failed');
+      }
+    };
+    await cleanup();
+    setInterval(cleanup, 60 * 60 * 1000);
+  });
 
   // Routes
   await app.register(healthRoutes);

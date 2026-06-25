@@ -4,7 +4,9 @@ $diagrams = @(
     "2_activity_diagram",
     "3_class_diagram",
     "4_data_flow_diagram",
-    "5_functional_hierarchy_diagram"
+    "5_functional_hierarchy_diagram",
+    "6_swimlane_diagram",
+    "7_sequence_diagram"
 )
 
 $outDir = "g:\Solar\diagrams\output"

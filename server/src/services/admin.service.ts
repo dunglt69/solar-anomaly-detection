@@ -10,22 +10,26 @@ import * as argon2 from 'argon2';
  * Generate the next sequential employee ID (EM-0001, EM-0002, etc.)
  */
 export async function generateEmployeeId(): Promise<string> {
-  const [lastUser] = await db.select({ employeeId: users.employeeId })
-    .from(users)
-    .orderBy(desc(users.employeeId))
-    .limit(1);
+  const MAX_RETRIES = 3;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const [lastUser] = await db.select({ employeeId: users.employeeId })
+      .from(users)
+      .orderBy(desc(users.employeeId))
+      .limit(1);
 
-  if (!lastUser || !lastUser.employeeId) {
-    return 'EM-0001';
+    if (!lastUser || !lastUser.employeeId) {
+      return 'EM-0001';
+    }
+
+    const match = lastUser.employeeId.match(/^EM-(\d+)$/);
+    if (!match) {
+      return 'EM-0001';
+    }
+
+    const nextNum = parseInt(match[1]!, 10) + 1 + attempt;
+    return `EM-${String(nextNum).padStart(4, '0')}`;
   }
-
-  const match = lastUser.employeeId.match(/^EM-(\d+)$/);
-  if (!match) {
-    return 'EM-0001';
-  }
-
-  const nextNum = parseInt(match[1]!, 10) + 1;
-  return `EM-${String(nextNum).padStart(4, '0')}`;
+  throw new Error('Failed to generate unique employee ID after retries');
 }
 
 // ─── List users ─────────────────────────────────────────────────────
@@ -105,7 +109,7 @@ export async function updateUser(id: string, data: {
   password?: string;
 }) {
   const setData: Record<string, any> = { updatedAt: new Date() };
-  if (data.displayName) setData.displayName = data.displayName;
+  if (data.displayName !== undefined) setData.displayName = data.displayName;
   if (data.email) setData.email = data.email;
   if (data.personalEmail) setData.personalEmail = data.personalEmail;
   if (data.dob) setData.dob = data.dob;
