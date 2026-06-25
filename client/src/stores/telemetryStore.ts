@@ -2,7 +2,22 @@ import { create } from 'zustand';
 import { useAuthStore } from './authStore';
 import { authFetch, apiUrl } from '../lib/authFetch';
 
-const WS_URL = (import.meta.env.VITE_WS_URL || 'ws://localhost:3000') + '/ws/telemetry';
+const getWsUrl = () => {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL + '/ws/telemetry';
+  }
+  if (typeof window !== 'undefined') {
+    const isHttps = window.location.protocol === 'https:';
+    const wsProtocol = isHttps ? 'wss:' : 'ws:';
+    if (window.location.port === '5173') {
+      return `${wsProtocol}//${window.location.hostname}:3000/ws/telemetry`;
+    }
+    return `${wsProtocol}//${window.location.host}/ws/telemetry`;
+  }
+  return 'ws://localhost:3000/ws/telemetry';
+};
+
+const WS_URL = getWsUrl();
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -237,11 +252,11 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
       // Fetch wider history buffer so users can scroll/pan back
       const now = new Date();
       const FETCH_RANGE_SECONDS: Record<string, number> = {
-        '1h': 86400,          // 24 hours (for 30s buckets)
-        '6h': 259200,         // 3 days (for 1m buckets)
-        '1d': 604800,         // 7 days (for 5m buckets)
-        '3d': 1296000,        // 15 days (for 15m buckets)
-        '1w': 2592000,        // 30 days (for 1h buckets)
+        '1h': 3600,           // 1 hour
+        '6h': 21600,          // 6 hours
+        '1d': 86400,          // 24 hours
+        '3d': 259200,         // 3 days
+        '1w': 604800,         // 7 days
       };
       const rangeSeconds = FETCH_RANGE_SECONDS[chartInterval] || 86400;
       const from = new Date(now.getTime() - rangeSeconds * 1000);
@@ -344,42 +359,47 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
   },
 
   preFetchAllRanges: async () => {
+    const activeInterval = get().chartInterval;
     const intervals: ChartInterval[] = ['1h', '6h', '1d', '3d', '1w'];
-    for (const interval of intervals) {
-      const now = new Date();
-      const FETCH_RANGE_SECONDS: Record<string, number> = {
-        '1h': 86400,          // 24 hours
-        '6h': 259200,         // 3 days
-        '1d': 604800,         // 7 days
-        '3d': 1296000,        // 15 days
-        '1w': 2592000,        // 30 days
-      };
-      const rangeSeconds = FETCH_RANGE_SECONDS[interval] || 86400;
-      const from = new Date(now.getTime() - rangeSeconds * 1000);
-      
-      const params = new URLSearchParams();
-      params.set('interval', interval);
-      params.set('from', from.toISOString());
-      params.set('to', now.toISOString());
+    const otherIntervals = intervals.filter((i) => i !== activeInterval);
 
-      try {
-        const res = await authFetch(apiUrl(`/api/v1/telemetry/aggregated?${params}`));
-        if (res.ok) {
-          const json = await res.json();
-          const rawData = json.data as AggregatedPoint[];
-          const processed = fillDataGaps(rawData, interval);
-          
-          set((state) => ({
-            chartCache: {
-              ...state.chartCache,
-              [interval]: processed,
-            },
-          }));
+    await Promise.all(
+      otherIntervals.map(async (interval) => {
+        const now = new Date();
+        const FETCH_RANGE_SECONDS: Record<string, number> = {
+          '1h': 3600,           // 1 hour
+          '6h': 21600,          // 6 hours
+          '1d': 86400,          // 24 hours
+          '3d': 259200,         // 3 days
+          '1w': 604800,         // 7 days
+        };
+        const rangeSeconds = FETCH_RANGE_SECONDS[interval] || 86400;
+        const from = new Date(now.getTime() - rangeSeconds * 1000);
+        
+        const params = new URLSearchParams();
+        params.set('interval', interval);
+        params.set('from', from.toISOString());
+        params.set('to', now.toISOString());
+
+        try {
+          const res = await authFetch(apiUrl(`/api/v1/telemetry/aggregated?${params}`));
+          if (res.ok) {
+            const json = await res.json();
+            const rawData = json.data as AggregatedPoint[];
+            const processed = fillDataGaps(rawData, interval);
+            
+            set((state) => ({
+              chartCache: {
+                ...state.chartCache,
+                [interval]: processed,
+              },
+            }));
+          }
+        } catch (err) {
+          console.error(`preFetchAllRanges error for ${interval}:`, err);
         }
-      } catch (err) {
-        console.error(`preFetchAllRanges error for ${interval}:`, err);
-      }
-    }
+      })
+    );
   },
 
   // ─── WebSocket connection ────────────────────────────────────

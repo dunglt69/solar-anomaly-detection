@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
-import { authFetch, apiUrl } from '../lib/authFetch';
+import { authFetch } from '../lib/authFetch';
 import { formatTime, formatLastSeen } from '../lib/formatTime';
 import './AdminPage.css';
 
-const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1`;
+import { API_V1 as API } from '../lib/api';
+
 
 function getHeaders() {
   return {

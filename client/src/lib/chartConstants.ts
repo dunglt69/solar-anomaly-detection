@@ -9,13 +9,13 @@ export const RANGE_MS: Record<ChartInterval, number> = {
   '1w': 604_800_000,
 };
 
-/** Fetch buffer range per interval (milliseconds) — wider than visible range for pan/scroll */
+/** Fetch buffer range per interval (milliseconds) — matched to visible range to optimize queries */
 export const FETCH_RANGE_MS: Record<ChartInterval, number> = {
-  '1h': 86_400_000,
-  '6h': 259_200_000,
-  '1d': 604_800_000,
-  '3d': 1_296_000_000,
-  '1w': 2_592_000_000,
+  '1h': 3_600_000,
+  '6h': 21_600_000,
+  '1d': 86_400_000,
+  '3d': 259_200_000,
+  '1w': 604_800_000,
 };
 
 /** Compute visible and fetch time boundaries for chart dataZoom */

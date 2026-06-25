@@ -1,6 +1,6 @@
 import { create } from 'zustand';
+import { API_BASE } from '../lib/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface User {
   id: string;

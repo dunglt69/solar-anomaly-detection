@@ -6,7 +6,8 @@ import { CHART_THEME } from '../lib/chartConstants';
 import type { EChartsOption } from 'echarts';
 import './AnalyticsPage.css';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { API_BASE as API } from '../lib/api';
+
 
 // ─── Types ──────────────────────────────────────────────────────────
 interface DailyEnergy {
@@ -399,7 +400,7 @@ export default function AnalyticsPage() {
           ))}
         </div>
         <span className="toolbar-info">
-          {dailyEnergy.length} day(s) · {summary?.daysWithData || 0} with data
+          {dailyEnergy.length} day(s)
         </span>
       </div>
 
@@ -431,15 +432,6 @@ export default function AnalyticsPage() {
                 {summary?.totalFaults || 0}
               </div>
               <div className="card-sub">{summary?.totalAlerts || 0} alerts generated</div>
-            </div>
-            <div className="summary-card">
-              <div className="card-label">Days with Data</div>
-              <div className="card-value">
-                {summary?.daysWithData || 0}
-              </div>
-              <div className="card-sub">
-                in selected range
-              </div>
             </div>
           </div>
 
