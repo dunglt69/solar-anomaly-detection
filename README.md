@@ -69,7 +69,7 @@
 ├── client/                     # Vite + React 19 Frontend
 │   ├── src/
 │   │   ├── components/         # Reusable UI elements (Charts, KPICards, Layout)
-│   │   ├── pages/              # Routing pages (Dashboard, Tickets, Alerts, Admin)
+│   │   ├── pages/              # Routing pages (Dashboard, Alerts, Admin, Settings)
 │   │   ├── stores/             # Zustand state stores (authStore, alertStore)
 │   │   └── styles/             # CSS design tokens & global layout variables
 │   └── package.json
