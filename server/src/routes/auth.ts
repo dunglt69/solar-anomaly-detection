@@ -46,7 +46,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       const bypassIpsRaw = process.env['TURNSTILE_BYPASS_IPS'] || '';
       const bypassIps = bypassIpsRaw.split(',').map(ip => ip.trim()).filter(Boolean);
       const isWhitelisted = bypassIps.some(bypassIp => {
-        return request.ip === bypassIp || request.ip.startsWith(bypassIp);
+        return request.ip === bypassIp;
       });
 
       if (turnstileSecret && !isWhitelisted) {
@@ -132,7 +132,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
       return reply.send({
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
         expiresIn: result.expiresIn,
         user: result.user,
         deviceRegistered: result.deviceRegistered || false,

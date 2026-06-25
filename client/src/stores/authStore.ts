@@ -62,7 +62,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(data.error || 'Login failed');
       }
 
-      // Store access token in localStorage (refresh token stays in httpOnly cookie)
+      // TODO: Move access token to memory-only storage to mitigate XSS token theft
       localStorage.setItem('accessToken', data.accessToken);
 
       set({

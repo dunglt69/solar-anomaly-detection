@@ -31,6 +31,15 @@ export default async function alertRoutes(fastify: FastifyInstance) {
     Body: { action?: 'acknowledge' | 'resolve' };
   }>('/api/v1/alerts/:id', {
     preHandler: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['acknowledge', 'resolve'] },
+        },
+        additionalProperties: false,
+      },
+    },
   }, async (request, reply) => {
     const userId = request.user?.sub || 'system';
     const action = request.body?.action || 'acknowledge';

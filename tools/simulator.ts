@@ -26,7 +26,7 @@ const MIX_FAULTS = false;
 const INTERVAL_MS = FAST_MODE ? 200 : Number(process.env.INTERVAL_MS || 1000);
 const BATCH_SIZE = FAST_MODE ? 5 : Number(process.env.BATCH_SIZE || 1);
 const AUTH_USER = process.env.AUTH_USER || 'admin';
-const AUTH_PASS = process.env.AUTH_PASS || 'Admin@123';
+const AUTH_PASS = process.env.AUTH_PASS;
 
 // ─── Correct fault names per dataset README ─────────────────────────
 const FAULT_NAMES: Record<number, string> = {
@@ -214,6 +214,9 @@ let accessToken = '';
 let tokenExpiry = 0;
 
 async function login(): Promise<void> {
+  if (!AUTH_PASS) {
+    throw new Error('AUTH_PASS environment variable is required');
+  }
   console.log(`🔑 Authenticating as '${AUTH_USER}'...`);
   const res = await fetch(`${API_URL}/api/v1/auth/login`, {
     method: 'POST',

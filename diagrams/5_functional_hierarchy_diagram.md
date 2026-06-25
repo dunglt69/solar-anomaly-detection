@@ -4,16 +4,16 @@
 
 ```mermaid
 graph TD
-  ROOT["EnergiaMind Platform\nNền tảng giám sát NLMT"]:::l0
+  ROOT["EnergiaMind Platform\nSolar Monitoring System"]:::l0
 
   ROOT --> M1 & M2 & M3 & M4 & M5 & M6
 
-  M1["1. Authentication\nXác thực & Phân quyền"]:::l1
-  M2["2. Monitoring\nGiám sát thời gian thực"]:::l1
-  M3["3. AI Detection\nPhát hiện bất thường"]:::l1
-  M4["4. Alerting\nCảnh báo & Thông báo"]:::l1
-  M5["5. Ticketing\nQuản lý sự cố"]:::l1
-  M6["6. Administration\nQuản trị hệ thống"]:::l1
+  M1["1. Authentication\n& Access Control"]:::l1
+  M2["2. Monitoring\nReal-Time Telemetry"]:::l1
+  M3["3. AI Detection\nAnomaly Diagnosis"]:::l1
+  M4["4. Alerting\n& Notifications"]:::l1
+  M5["5. Ticketing\nIncident Tracking"]:::l1
+  M6["6. Administration\nSystem Management"]:::l1
 
   M1 --> M1A["Login / Logout"]:::l2
   M1 --> M1B["JWT Rotation"]:::l2
@@ -24,9 +24,9 @@ graph TD
   M2 --> M2C["Time-Series Charts"]:::l2
   M2 --> M2D["Data Export"]:::l2
 
-  M3 --> M3A["Sliding Window Buffer\nBộ đệm sequence 24 bước"]:::l2
-  M3 --> M3B["InceptionTime ONNX\nSuy luận mô hình AI"]:::l2
-  M3 --> M3C["Softmax Classifier\nPhân loại 5 nhóm lỗi"]:::l2
+  M3 --> M3A["Sliding Window Buffer\n24-Step Sequence Buffer"]:::l2
+  M3 --> M3B["InceptionTime ONNX\nAI Model Inference"]:::l2
+  M3 --> M3C["Softmax Classifier\n5-Class Fault Classifier"]:::l2
 
   M4 --> M4A["Generate Alert"]:::l2
   M4 --> M4B["WS Broadcast"]:::l2
@@ -39,7 +39,7 @@ graph TD
   M6 --> M6A["User Management"]:::l2
   M6 --> M6B["Activity Log"]:::l2
   M6 --> M6C["System Settings"]:::l2
-  M6 --> M6D["Database Schema\nSơ đồ cơ sở dữ liệu"]:::l2
+  M6 --> M6D["Database Schema\nERD Diagram"]:::l2
 
   M1A --> M1A1["Validate Credentials"]:::l3
   M1A --> M1A2["Account Lockout"]:::l3

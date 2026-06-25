@@ -38,49 +38,49 @@ export async function processDetectionResult(
 
   const detectionLayer = 'ai';
 
-  // Create alert with AI detection metadata
-  await db.insert(alerts).values({
-    id: alertId,
-    timestamp,
-    severity,
-    faultType: detection.faultLabel,
-    confidence: detection.confidence,
-    detectionLayer,
-    telemetryId: null, // Not linked to specific row
-    acknowledged: false,
+  const result = await db.transaction(async (tx) => {
+    await tx.insert(alerts).values({
+      id: alertId,
+      timestamp,
+      severity,
+      faultType: detection.faultLabel,
+      confidence: detection.confidence,
+      detectionLayer,
+      telemetryId: null,
+      acknowledged: false,
+    });
+
+    const ticketId = generateIncidentId();
+    const detectionInfo = `AI InceptionTime (${(detection.confidence * 100).toFixed(1)}% confidence)`;
+
+    await tx.insert(tickets).values({
+      id: ticketId,
+      status: 'open',
+      severity,
+      faultType: detection.faultLabel,
+      affectedComponent: 'DC Strings 1 & 2',
+      title: `${faultName} Detected — ${readings.pdcTotal.toFixed(0)}W @ ${readings.irr.toFixed(0)} W/m²`,
+      description: `AI-powered fault detection triggered.\n\n` +
+        `**Fault Type:** ${faultName} (Label ${detection.faultLabel})\n` +
+        `**Severity:** ${severity.toUpperCase()}\n` +
+        `**Confidence:** ${(detection.confidence * 100).toFixed(1)}%\n` +
+        `**Detection:** ${detectionInfo}\n` +
+        `**Details:** ${detection.details}\n` +
+        `**String 1:** V1=${readings.vdc1.toFixed(1)}V, I1=${readings.idc1.toFixed(2)}A\n` +
+        `**String 2:** V2=${readings.vdc2.toFixed(1)}V, I2=${readings.idc2.toFixed(2)}A\n` +
+        `**Total Power:** ${readings.pdcTotal.toFixed(1)}W\n` +
+        `**Irradiance:** ${readings.irr.toFixed(1)} W/m²\n` +
+        `**Timestamp:** ${timestamp.toISOString()}`,
+      alertId,
+      createdBy: null,
+    });
+
+    await tx.update(alerts).set({ ticketId }).where(eq(alerts.id, alertId));
+
+    return { ticketId, detectionInfo };
   });
 
-  // Auto-create ticket
-  const ticketId = generateIncidentId();
-
-  const detectionInfo = `AI InceptionTime (${(detection.confidence * 100).toFixed(1)}% confidence)`;
-
-  await db.insert(tickets).values({
-    id: ticketId,
-    status: 'open',
-    severity,
-    faultType: detection.faultLabel,
-    affectedComponent: 'DC Strings 1 & 2',
-    title: `${faultName} Detected — ${readings.pdcTotal.toFixed(0)}W @ ${readings.irr.toFixed(0)} W/m²`,
-    description: `AI-powered fault detection triggered.\n\n` +
-      `**Fault Type:** ${faultName} (Label ${detection.faultLabel})\n` +
-      `**Severity:** ${severity.toUpperCase()}\n` +
-      `**Confidence:** ${(detection.confidence * 100).toFixed(1)}%\n` +
-      `**Detection:** ${detectionInfo}\n` +
-      `**Details:** ${detection.details}\n` +
-      `**String 1:** V1=${readings.vdc1.toFixed(1)}V, I1=${readings.idc1.toFixed(2)}A\n` +
-      `**String 2:** V2=${readings.vdc2.toFixed(1)}V, I2=${readings.idc2.toFixed(2)}A\n` +
-      `**Total Power:** ${readings.pdcTotal.toFixed(1)}W\n` +
-      `**Irradiance:** ${readings.irr.toFixed(1)} W/m²\n` +
-      `**Timestamp:** ${timestamp.toISOString()}`,
-    alertId,
-    createdBy: null, // system auto-created
-  });
-
-  // Link alert to ticket
-  await db.update(alerts).set({ ticketId }).where(eq(alerts.id, alertId));
-
-  return { alertId, ticketId, severity, faultName, detectionLayer: detection.detectionLayer, confidence: detection.confidence };
+  return { alertId, ticketId: result.ticketId, severity, faultName, detectionLayer: detection.detectionLayer, confidence: detection.confidence };
 }
 
 // ─── Query alerts ───────────────────────────────────────────────────

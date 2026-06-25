@@ -46,7 +46,7 @@ def main():
     
     # Save metadata
     meta = {
-        "model": "InceptionTime", "version": "v2",
+        "model": "InceptionTime", "version": ckpt.get("version", "v2." + str(ckpt.get("epoch", 0))),
         "features": NUM_FEATURES, "window_size": WINDOW_SIZE,
         "num_classes": NUM_CLASSES, "class_names": FAULT_NAMES,
         "base_features": ["vdc1","vdc2","idc1","idc2","irr","pvt",
@@ -54,7 +54,7 @@ def main():
         "ratio_features": ["vdc_ratio","idc_ratio","vdc_diff","idc_diff"],
         "focal_gamma": FOCAL_GAMMA,
         "best_macro_f1": float(ckpt.get("best_f1", 0)),
-        "test_accuracy": float(ckpt.get("test_acc", 0)),
+        "test_accuracy": float(ckpt.get("test_acc", ckpt.get("best_acc", ckpt.get("val_acc", 0)))),
         "params": sum(p.numel() for p in model.parameters()),
     }
     with open(MODELS_DIR / "model_metadata.json", "w") as f:

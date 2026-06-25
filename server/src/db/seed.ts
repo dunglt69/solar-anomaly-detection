@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { db } from './index.js';
 import { users, config } from './schema.js';
 import * as argon2 from 'argon2';
@@ -5,7 +6,11 @@ import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
 
 const ADMIN_USERNAME = process.env['ADMIN_USERNAME'] || 'admin';
-const ADMIN_PASSWORD = process.env['ADMIN_PASSWORD'] || 'Admin@123';
+const ADMIN_PASSWORD = process.env['ADMIN_PASSWORD'];
+if (!ADMIN_PASSWORD) {
+  console.warn('⚠️  ADMIN_PASSWORD not set in environment. Generating random password...');
+}
+const finalPassword = ADMIN_PASSWORD || crypto.randomUUID().slice(0, 16) + '!A1';
 const ADMIN_EMAIL = process.env['ADMIN_EMAIL'] || 'admin@energiamind.local';
 
 export async function seed() {
@@ -23,7 +28,7 @@ export async function seed() {
   }
 
   // Create admin user
-  const passwordHash = await argon2.hash(ADMIN_PASSWORD, {
+  const passwordHash = await argon2.hash(finalPassword, {
     type: argon2.argon2id,
     memoryCost: 19456,
     timeCost: 2,
@@ -61,7 +66,11 @@ export async function seed() {
     }).onConflictDoNothing();
   }
 
-  console.log('Seeded admin user: EM-0001 (password set from environment)');
+  if (!ADMIN_PASSWORD) {
+    console.log(`⚠️  Generated admin password: ${finalPassword}`);
+    console.log('   Please change this immediately and set ADMIN_PASSWORD in .env');
+  }
+  console.log('Seeded admin user: EM-0001');
   console.log('Seeded default system config.');
 }
 

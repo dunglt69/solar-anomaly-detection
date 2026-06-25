@@ -29,7 +29,21 @@ export default async function configRoutes(fastify: FastifyInstance) {
     const userId = request.user!.sub;
     const entries = request.body;
 
+    const ALLOWED_CONFIG_KEYS = new Set([
+      'detection_sensitivity',
+      'alert_cooldown_minutes',
+      'modbus_poll_interval',
+      'maintenance_mode',
+      'notification_email',
+      'auto_acknowledge_info',
+      'dashboard_refresh_interval',
+    ]);
+
     for (const [key, value] of Object.entries(entries)) {
+      if (!ALLOWED_CONFIG_KEYS.has(key)) {
+        return reply.status(400).send({ error: `Unknown config key: ${key}` });
+      }
+
       const existing = await db.select().from(config).where(eq(config.key, key));
 
       if (existing.length > 0) {

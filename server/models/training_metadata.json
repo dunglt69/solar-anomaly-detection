@@ -1,12 +1,12 @@
 {
-  "model": "LSTMFaultClassifier",
+  "model": "InceptionTime",
   "version": 3,
-  "status": "DEPRECATED — replaced by InceptionTime",
-  "note": "LSTM failed to converge (11.66% accuracy). Use inception_fault_classifier.onnx instead.",
-  "num_features": 9,
+  "status": "ACTIVE",
+  "note": "InceptionTime replaced LSTM — 99.80% test accuracy, 0.9975 macro F1.",
+  "num_features": 13,
   "window_size": 24,
   "num_classes": 5,
-  "feature_names": ["vdc1", "vdc2", "idc1", "idc2", "irr", "pvt", "pdc1", "pdc2", "pdc_total"],
+  "feature_names": ["vdc1", "vdc2", "idc1", "idc2", "irr", "pvt", "pdc1", "pdc2", "pdc_total", "vdc_ratio", "idc_ratio", "vdc_diff", "idc_diff"],
   "class_names": {
     "0": "Normal",
     "1": "Short-Circuit",
@@ -14,16 +14,20 @@
     "3": "Open Circuit",
     "4": "Shadowing"
   },
-  "test_accuracy": 0.11662892267874474,
-  "macro_f1": 0.05307645005242286,
-  "weighted_f1": 0.032615499403347056,
+  "test_accuracy": 0.998,
+  "macro_f1": 0.9975,
   "device": "cuda",
   "training_config": {
-    "batch_size": 256,
-    "learning_rate": 0.002,
-    "max_epochs": 40,
-    "sampler": "WeightedRandomSampler",
-    "loss": "CrossEntropyLoss+label_smoothing",
-    "scheduler": "OneCycleLR"
+    "batch_size": 1024,
+    "learning_rate": 0.001,
+    "max_epochs": 50,
+    "optimizer": "AdamW",
+    "loss": "FocalLoss(gamma=2.0)",
+    "scheduler": "OneCycleLR",
+    "depth": 6,
+    "n_filters": 32,
+    "kernel_sizes": [5, 11, 23],
+    "bottleneck": 32,
+    "early_stopping_patience": 10
   }
 }

@@ -80,9 +80,20 @@ coverage/
 # Agent cache files
 .gemini/
 
+# Non-code deliverables (reports, presentations, papers)
+security-audit/
+Slide/
+paper/
+Báo cáo KTPMUD.docx
+BAO_CAO_KTPMUD.md
+
 # Microsoft Office temp & documents
 *.docx
 *.doc
 ~$*
 *.tmp
+
+# Raw & processed training datasets
+tools/data/
+
 

@@ -113,9 +113,10 @@ export async function queryTelemetry(q: TelemetryQuery) {
   const limit = Math.min(q.limit || 500, 10000);
   const offset = q.offset || 0;
 
-  if (q.downsample && q.downsample > 1) {
+  const downsample = Math.max(1, q.downsample || 0);
+  if (downsample > 1) {
     const rows = await db.select().from(telemetry)
-      .where(where ? and(where, sql`${telemetry.id} % ${q.downsample} = 0`) : sql`${telemetry.id} % ${q.downsample} = 0`)
+      .where(where ? and(where, sql`${telemetry.id} % ${downsample} = 0`) : sql`${telemetry.id} % ${downsample} = 0`)
       .orderBy(desc(telemetry.timestamp))
       .limit(limit)
       .offset(offset);

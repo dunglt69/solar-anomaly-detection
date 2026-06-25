@@ -58,7 +58,8 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       if (err.isConflict) {
         return reply.status(409).send({ error: err.message });
       }
-      return reply.status(400).send({ error: err.message });
+      request.log.error(err, 'Failed to update ticket');
+      return reply.status(400).send({ error: 'Failed to update ticket' });
     }
   });
 

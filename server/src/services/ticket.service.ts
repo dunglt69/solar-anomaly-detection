@@ -110,7 +110,7 @@ export async function updateTicket(
   }
 
   if (updates.assigneeId !== undefined) setData.assigneeId = updates.assigneeId;
-  if (updates.resolutionSummary) setData.resolutionSummary = updates.resolutionSummary;
+  if (updates.resolutionSummary !== undefined) setData.resolutionSummary = updates.resolutionSummary;
 
   await db.update(tickets).set(setData).where(eq(tickets.id, id));
 

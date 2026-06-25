@@ -19,7 +19,7 @@ if (!JWT_SECRET_RAW || JWT_SECRET_RAW.length < 32) {
   }
   console.warn('⚠ WARNING: JWT_SECRET not set or too short (min 32 chars). Using dev default — NOT SAFE FOR PRODUCTION.');
 }
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW || 'energiamind-dev-secret-change-in-prod');
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW || 'energiamind-dev-secret-' + Date.now());
 const ACCESS_TOKEN_TTL = '15m';
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const MAX_FAILED_ATTEMPTS = 5;

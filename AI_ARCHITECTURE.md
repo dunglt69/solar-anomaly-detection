@@ -96,7 +96,7 @@ Here is the visualization of the 1D receptive field convolution over time:
 
 ## 4. Hyperparameters & Training Specifications
 
-* **Optimization:** Adam optimizer with a learning rate of $1e-3$.
+* **Optimization:** AdamW optimizer with a learning rate of $1e-3$.
 * **Epochs:** Trained for a maximum of 50 epochs with an early stopping patience of 10.
 * **Batch Size:** 1024 samples.
 * **Loss Function:** **Focal Loss** ($\gamma=2.0$) with class-balanced weighting $\alpha$ to counter class imbalance (85% of the dataset is Normal).
