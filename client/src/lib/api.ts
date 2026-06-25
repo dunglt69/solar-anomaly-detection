@@ -1,5 +1,18 @@
 // ─── Shared API Configuration ───────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const getApiBase = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined') {
+    if (window.location.port === '5173') {
+      return `http://${window.location.hostname}:3000`;
+    }
+    return window.location.origin;
+  }
+  return 'http://localhost:3000';
+};
+
+const API_BASE = getApiBase();
 export const API_V1 = `${API_BASE}/api/v1`;
 
 export function getAuthHeaders(): Record<string, string> {

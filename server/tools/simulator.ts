@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -116,10 +117,12 @@ const loginUrl = url.replace('/v1/telemetry', '/v1/auth/login');
 
 async function authenticate(): Promise<boolean> {
   try {
+    const username = process.env.ADMIN_USERNAME || 'admin';
+    const password = process.env.ADMIN_PASSWORD || process.env.AUTH_PASS || 'Admin@123';
     const loginRes = await fetch(loginUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'Admin@123' }),
+      body: JSON.stringify({ username, password }),
     });
     if (loginRes.ok) {
       const data = await loginRes.json() as any;

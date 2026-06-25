@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useTelemetryStore, type ChartInterval } from '../stores/telemetryStore';
 import KPICards from '../components/dashboard/KPICards';
 import PowerChart from '../components/charts/PowerChart';
@@ -22,15 +23,34 @@ const INTERVALS: { value: ChartInterval; label: string; tooltip: string }[] = [
 export default function DashboardPage() {
   const {
     chartData, chartInterval, isConnected,
-    recentAlerts, lastDataReceived, currentTime,
+    recentAlerts, lastDataReceived, currentTime
+  } = useTelemetryStore(useShallow((state) => ({
+    chartData: state.chartData,
+    chartInterval: state.chartInterval,
+    isConnected: state.isConnected,
+    recentAlerts: state.recentAlerts,
+    lastDataReceived: state.lastDataReceived,
+    currentTime: state.currentTime,
+  })));
+
+  const {
     fetchChartData, fetchKPIs, fetchLatestPoint,
     setChartInterval, setCustomRange, clearCustomRange,
     dismissAlert, connectWebSocket, disconnectWebSocket,
     preFetchAllRanges,
-  } = useTelemetryStore();
+  } = useTelemetryStore(useShallow((state) => ({
+    fetchChartData: state.fetchChartData,
+    fetchKPIs: state.fetchKPIs,
+    fetchLatestPoint: state.fetchLatestPoint,
+    setChartInterval: state.setChartInterval,
+    setCustomRange: state.setCustomRange,
+    clearCustomRange: state.clearCustomRange,
+    dismissAlert: state.dismissAlert,
+    connectWebSocket: state.connectWebSocket,
+    disconnectWebSocket: state.disconnectWebSocket,
+    preFetchAllRanges: state.preFetchAllRanges,
+  })));
 
-  const kpiInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
-  const chartRefreshInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -41,44 +61,38 @@ export default function DashboardPage() {
     fetchKPIs();
     fetchLatestPoint();
     connectWebSocket();
-    preFetchAllRanges();
 
-    // Refresh KPIs every 10s, chart data every 30s
-    kpiInterval.current = setInterval(fetchKPIs, 10_000);
-    chartRefreshInterval.current = setInterval(fetchChartData, 30_000);
+    // Refresh KPIs every 10s, chart data every 30s (only if tab is visible)
+    const kpiTimer = setInterval(() => {
+      if (!document.hidden) {
+        fetchKPIs();
+      }
+    }, 10_000);
+
+    const chartTimer = setInterval(() => {
+      if (!document.hidden) {
+        fetchChartData();
+      }
+    }, 30_000);
+
+    // Refresh instantly when user returns to tab
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        fetchChartData();
+        fetchKPIs();
+        fetchLatestPoint();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       disconnectWebSocket();
-      clearInterval(kpiInterval.current);
-      clearInterval(chartRefreshInterval.current);
+      clearInterval(kpiTimer);
+      clearInterval(chartTimer);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [fetchChartData, fetchKPIs, fetchLatestPoint, connectWebSocket, disconnectWebSocket, preFetchAllRanges]);
-
-  useEffect(() => {
-    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-    const handleVisibility = () => {
-      if (document.hidden) {
-        clearInterval(kpiInterval.current);
-        clearInterval(chartRefreshInterval.current);
-      } else {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          fetchChartData();
-          fetchKPIs();
-          fetchLatestPoint();
-          kpiInterval.current = setInterval(fetchKPIs, 10_000);
-          chartRefreshInterval.current = setInterval(fetchChartData, 30_000);
-        }, 200);
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-      clearTimeout(debounceTimer);
-    };
-  }, [fetchChartData, fetchKPIs, fetchLatestPoint]);
-
-
 
   const handleRefresh = useCallback(() => {
     fetchChartData();

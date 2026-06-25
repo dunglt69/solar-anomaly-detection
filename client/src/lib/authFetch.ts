@@ -1,7 +1,7 @@
 import { useAuthStore } from '../stores/authStore';
 import { getDeviceFingerprint, getDeviceInfo } from '../utils/fingerprint';
+import { API_BASE } from './api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 let isRefreshing = false;
 let refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: Error) => void }> = [];

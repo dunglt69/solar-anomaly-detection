@@ -167,6 +167,20 @@ export async function getAggregatedTelemetry(
   const toTs = to ? Math.floor(new Date(to).getTime() / 1000) : Math.floor(Date.now() / 1000) + 86400;
   if (isNaN(fromTs) || isNaN(toTs)) throw new Error('Invalid timestamp');
 
+  // Count rows in this range to see if we should downsample for performance
+  const countRes = await db.all(sql`
+    SELECT COUNT(*) as count FROM telemetry WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
+  `) as any[];
+  const totalInQuery = Number(countRes[0]?.count) || 0;
+
+  // We want to limit the raw rows processed to around 15,000 for event-loop safety
+  const maxRawRows = 15000;
+  const downsample = totalInQuery > maxRawRows ? Math.ceil(totalInQuery / maxRawRows) : 1;
+
+  const whereClause = downsample > 1 
+    ? sql`WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs} AND (id % ${downsample} = 0)`
+    : sql`WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}`;
+
   const rows = await db.all(sql`
     SELECT 
       ("timestamp" / ${bucketSize}) * ${bucketSize} as bucket,
@@ -182,7 +196,7 @@ export async function getAggregatedTelemetry(
       SUM(CASE WHEN fault_label > 0 THEN 1 ELSE 0 END) as faultCount,
       COUNT(*) as dataPoints
     FROM telemetry
-    WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
+    ${whereClause}
     GROUP BY ("timestamp" / ${bucketSize}) * ${bucketSize}
     ORDER BY bucket ASC
   `) as any[];
@@ -198,8 +212,8 @@ export async function getAggregatedTelemetry(
     avgIdc2: r.avgIdc2 || 0,
     avgIrr: r.avgIrr || 0,
     avgPvt: r.avgPvt || 0,
-    faultCount: Number(r.faultCount) || 0,
-    dataPoints: r.dataPoints,
+    faultCount: (Number(r.faultCount) || 0) * downsample,
+    dataPoints: r.dataPoints * downsample,
   }));
 }
 
@@ -228,9 +242,22 @@ export async function getTelemetryKPIs(from?: string, to?: string) {
   const toTs = to ? Math.floor(new Date(to).getTime() / 1000) : Math.floor(Date.now() / 1000) + 86400;
   if (isNaN(fromTs) || isNaN(toTs)) throw new Error('Invalid timestamp');
 
+  // Count first for exact total records
+  const countRes = await db.all(sql`
+    SELECT COUNT(*) as count FROM telemetry WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
+  `) as any[];
+  const totalRecords = Number(countRes[0]?.count) || 0;
+
+  // We want to limit raw rows processed for averages to around 15,000 for speed
+  const maxRawRows = 15000;
+  const downsample = totalRecords > maxRawRows ? Math.ceil(totalRecords / maxRawRows) : 1;
+
+  const whereClause = downsample > 1
+    ? sql`WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs} AND (id % ${downsample} = 0)`
+    : sql`WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}`;
+
   const statsRows = await db.all(sql`
     SELECT
-      COUNT(*) as totalRecords,
       ROUND(AVG(pdc_total), 2) as avgPower,
       MIN("timestamp") as minTs,
       MAX("timestamp") as maxTs,
@@ -241,7 +268,7 @@ export async function getTelemetryKPIs(from?: string, to?: string) {
       ROUND(AVG(idc1), 2) as avgIdc1,
       ROUND(AVG(idc2), 2) as avgIdc2
     FROM telemetry
-    WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
+    ${whereClause}
   `) as any[];
 
   const stats = statsRows[0];
@@ -258,12 +285,10 @@ export async function getTelemetryKPIs(from?: string, to?: string) {
   const faultDist = await db.all(sql`
     SELECT fault_label as faultLabel, COUNT(*) as count
     FROM telemetry
-    WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
+    ${whereClause}
     GROUP BY fault_label
   `) as any[];
 
-  const totalRecords = stats?.totalRecords || 0;
-  
   let totalEnergy = 0;
   if (stats?.minTs && stats?.maxTs && stats?.avgPower) {
     const hours = (stats.maxTs - stats.minTs) / 3600;
@@ -284,7 +309,7 @@ export async function getTelemetryKPIs(from?: string, to?: string) {
     faultDistribution: faultDist.map((d: any) => ({
       label: FAULT_LABELS[d.faultLabel ?? 0] || `Unknown(${d.faultLabel})`,
       code: d.faultLabel,
-      count: d.count,
+      count: d.count * downsample,
     })),
   };
 }

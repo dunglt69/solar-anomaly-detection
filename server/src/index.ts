@@ -111,9 +111,9 @@ async function main() {
 
   // DDoS & Resource exhaustion protection
   await app.register(underPressure, {
-    maxEventLoopDelay: 1000,
-    maxHeapUsedBytes: 1024 * 1024 * 1024, // 1GB
-    maxRssBytes: 1.5 * 1024 * 1024 * 1024, // 1.5GB
+    maxEventLoopDelay: 5000,
+    maxHeapUsedBytes: 2 * 1024 * 1024 * 1024, // 2GB
+    maxRssBytes: 3.0 * 1024 * 1024 * 1024, // 3GB
   });
 
   await app.register(cors, {
