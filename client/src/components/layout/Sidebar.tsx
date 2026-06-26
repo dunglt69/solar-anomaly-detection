@@ -36,20 +36,22 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="sidebar-nav">
-        <div className="sidebar-section">
-          {!collapsed && <span className="sidebar-section-label">Monitoring</span>}
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-              title={collapsed ? item.label : undefined}
-            >
-              <item.icon size={18} />
-              {!collapsed && <span>{item.label}</span>}
-            </NavLink>
-          ))}
-        </div>
+        {user?.role !== 'security_engineer' && (
+          <div className="sidebar-section">
+            {!collapsed && <span className="sidebar-section-label">Monitoring</span>}
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+                title={collapsed ? item.label : undefined}
+              >
+                <item.icon size={18} />
+                {!collapsed && <span>{item.label}</span>}
+              </NavLink>
+            ))}
+          </div>
+        )}
 
         {(user?.role === 'admin' || user?.role === 'security_engineer') && (
           <div className="sidebar-section">
