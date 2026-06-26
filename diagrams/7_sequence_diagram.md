@@ -10,8 +10,8 @@ sequenceDiagram
 
   Note over OpA, DB: Operator A and B receive unacknowledged alert notification (acknowledged = 0)
   
-  OpA->>Server: POST /api/v1/alerts/ALT-99/acknowledge (Acknowledge request)
-  OpB->>Server: POST /api/v1/alerts/ALT-99/acknowledge (Acknowledge request)
+  OpA->>Server: PATCH /api/v1/alerts/ALT-99 { action: "acknowledge" }
+  OpB->>Server: PATCH /api/v1/alerts/ALT-99 { action: "acknowledge" }
   
   Note over Server: Server receives Operator A request first by a fraction of a second
   Server->>DB: Atomic conditional update:<br>UPDATE alerts SET acknowledged = 1, acknowledged_by = 'OpA' WHERE id = 'ALT-99' AND acknowledged = 0

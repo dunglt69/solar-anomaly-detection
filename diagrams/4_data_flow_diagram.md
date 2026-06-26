@@ -25,6 +25,9 @@ flowchart LR
   D4[("D4\nusers")]:::store
   D5[("D5\nlog")]:::store
   D6[("D6\nregistered_devices")]:::store
+  D7[("D7\nsessions")]:::store
+  D8[("D8\nconfig")]:::store
+  D9[("D9\nticket_comments")]:::store
 
   %% Main pipeline
   SENSOR -->|"Raw JSON"| P1
@@ -54,6 +57,10 @@ flowchart LR
   P7 -->|"Session"| D4
   P7 -->|"Log"| D5
   P7 -->|"Register / Reset"| D6
+  P7 -->|"Refresh token"| D7
+  P7 -->|"Read settings"| D8
+  BROWSER -->|"Comment"| P5
+  P5 -->|"Store"| D9
 
   classDef ext fill:#F1F5F9,stroke:#475569,stroke-width:2px
   classDef proc fill:#EEF2FF,stroke:#6366F1,stroke-width:2px

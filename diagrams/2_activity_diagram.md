@@ -51,9 +51,8 @@ flowchart LR
   subgraph TICKET ["🎫 Ticketing"]
     direction TB
     F1["Auto-Create\nTicket"]:::ticket
-    F2["Assign Operator"]:::ticket
-    F3["Email Notify"]:::ticket
-    F1 --> F2 --> F3
+    F2["Broadcast via\nWebSocket"]:::ticket
+    F1 --> F2
   end
 
   ERR["400 Error"]:::error

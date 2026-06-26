@@ -1,0 +1,42 @@
+sequenceDiagram
+  autonumber
+  actor User as 👤 User / Browser
+  participant Server as ⚙️ Fastify Server
+  participant CF as 🛡️ Cloudflare Turnstile
+  participant DB as 🗄️ SQLite Database
+
+  Note over User, DB: Step 1: User Login Flow (POST /api/v1/auth/login)
+  User->>CF: Get CAPTCHA turnstileToken
+  CF-->>User: Return turnstileToken
+  User->>Server: POST /api/v1/auth/login <br>[username, password, turnstileToken, x-hw-signature, _em_device]
+  
+  opt Turnstile Configured
+      Server->>CF: Verify turnstileToken (siteverify)
+      CF-->>Server: Return success: true
+  end
+  
+  Server->>DB: Query User by username
+  DB-->>Server: Return User info & passwordHash
+  Server->>Server: Verify password (argon2.verify)
+  
+  alt Device Binding Check
+      Server->>DB: Query registered_devices for userId & deviceToken
+      DB-->>Server: Return binding record
+      alt Device is not registered
+          Server-->>User: Response 460 Access Denied (device_not_registered)
+      else Device registered & matches hardware signature
+          Note over Server: Device authorized
+      end
+  end
+
+  Server->>DB: Create Session & store refreshToken hash
+  DB-->>Server: Confirm session stored
+  Server-->>User: Response 200 OK [accessToken, user details] <br>(Set-Cookie: refreshToken, _em_device)
+
+  Note over User, DB: Step 2: Token Refresh Flow (POST /api/v1/auth/refresh)
+  User->>Server: POST /api/v1/auth/refresh (with refreshToken cookie + fingerprint)
+  Server->>DB: Verify session (find refreshToken, check not revoked/expired)
+  DB-->>Server: Return Session details
+  Server->>DB: Rotate Refresh Token: Revoke old, insert new Session
+  DB-->>Server: Confirm rotation stored
+  Server-->>User: Response 200 OK [accessToken] <br>(Set-Cookie: new refreshToken)

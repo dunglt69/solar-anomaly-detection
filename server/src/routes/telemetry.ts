@@ -140,11 +140,11 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
   fastify.get<{ Querystring: { n?: string } }>('/api/v1/telemetry/latest', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
-    const raw = Number(request.query.n);
+    const raw = request.query.n !== undefined ? Number(request.query.n) : 200;
     if (raw <= 0 || !Number.isFinite(raw)) {
       return reply.status(400).send({ error: 'Parameter n must be a positive number' });
     }
-    const n = Math.min(raw || 200, 10000);
+    const n = Math.min(raw, 10000);
     const rows = await getLatestTelemetry(n);
     return reply.send({ data: rows.reverse(), count: rows.length });
   });
