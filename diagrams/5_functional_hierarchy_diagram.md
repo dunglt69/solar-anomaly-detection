@@ -21,7 +21,7 @@ graph TD
   M2 --> M2A["Live Dashboard"]:::l2
   M2 --> M2B["KPI Cards"]:::l2
   M2 --> M2C["Time-Series Charts"]:::l2
-  M2 --> M2D["Data Export"]:::l2
+  M2 --> M2D["Dynamic Downsampling"]:::l2
 
   M3 --> M3A["Sliding Window Buffer\n24-Step Sequence Buffer"]:::l2
   M3 --> M3B["InceptionTime ONNX\nAI Model Inference"]:::l2
@@ -62,5 +62,5 @@ graph TD
 |---|---|---|
 | **L0 — System** | 1 | EnergiaMind Platform |
 | **L1 — Modules** | 5 | Auth, Monitoring, AI, Alerting & Ticketing, Admin |
-| **L2 — Sub-functions** | 19 | Login, KPI Cards, ONNX Inference, WS Broadcast, State Machine, Database Schema |
+| **L2 — Sub-functions** | 19 | Login, KPI Cards, ONNX Inference, WS Broadcast, State Machine, Dynamic Downsampling |
 | **L3 — Leaf Operations** | 12 | Validate Credentials, Device Binding Check, Unlock Account, Reset Device Binding |

@@ -17,5 +17,8 @@
   },
   "dependencies": {
     "docx": "^9.7.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
   }
 }

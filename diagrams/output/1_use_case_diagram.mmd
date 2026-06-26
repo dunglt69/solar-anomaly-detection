@@ -13,9 +13,8 @@ graph TB
     useLogin(("Login / Logout")):::system
     useViewDashboard(("View Telemetry\nDashboard")):::system
     useViewAnalytics(("View Analytics\nCharts & Stats")):::system
-    useViewAlerts(("View Alerts")):::system
-    useManageTickets(("Create / Manage\nTickets")):::system
-    useAcknowledgeAlert(("Acknowledge\nAlert")):::system
+    useViewAlerts(("View Alerts & Incident Tickets\n(Unified Alert-Ticket UI)")):::system
+    useAcknowledgeAlert(("Acknowledge & Resolve\nAlerts/Tickets")):::system
     useInjectData(("Ingest Telemetry\nData")):::system
     useViewDatabaseSchema(("View Database\nSchema (ERD)")):::system
   end
@@ -35,14 +34,12 @@ graph TB
   Admin --- useViewDashboard
   Admin --- useViewAnalytics
   Admin --- useViewAlerts
-  Admin --- useManageTickets
   Admin --- useAcknowledgeAlert
 
   Operator --- useLogin
   Operator --- useViewDashboard
   Operator --- useViewAnalytics
   Operator --- useViewAlerts
-  Operator --- useManageTickets
   Operator --- useAcknowledgeAlert
 
   Security --- useLogin

@@ -15,7 +15,7 @@ sequenceDiagram
   loop Polling Cycle every 5s
       Gateway->>Panel: Request Modbus registers read (Holding/Input)
       Panel-->>Gateway: Response raw voltage, current, temperature, irradiance
-      Gateway->>Backend: HTTP POST /api/v1/telemetry (Upload raw sensor data)
+      Gateway->>Backend: Internal call: ingestTelemetry() (store raw sensor data)
       Note over Backend: Trigger Telemetry Ingestion Pipeline
       Backend->>Backend: Compute power & normalize (MinMax Scaler)
       Backend->>Backend: Push to 24-step sliding window buffer

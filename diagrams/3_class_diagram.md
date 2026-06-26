@@ -135,14 +135,14 @@ classDiagram
         -actorRole: admin|solar_operator|security_engineer|system
         -action: string
         -target: string
-        -details: string
+        -details: json
         -ip: string
         -userAgent: string
     }
 
     class SystemConfig {
         -key: string
-        -value: string
+        -value: json
         -updatedBy: string
         -updatedAt: Date
     }

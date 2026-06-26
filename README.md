@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
+  <img src="https://img.shields.io/badge/Vite-8.0-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
   <img src="https://img.shields.io/badge/React-19.0-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19">
   <img src="https://img.shields.io/badge/Fastify-5.0-black?style=for-the-badge&logo=fastify&logoColor=white" alt="Fastify 5">
   <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
@@ -22,17 +22,21 @@
 
 ---
 
-## 1. Author & Academic Affiliation
+## 1. Authors & Academic Affiliation
 
-*   **Author:** **Le Tri Dung**
-    *   *Major:* Electronics and Telecommunication Engineering (ET-LUH K69)
-    *   *Affiliation:* Member of **FIL Research Group**, Advanced Networking and Smart Applications (ANSA) Laboratory, School of Electrical and Electronic Engineering, Hanoi University of Science and Technology (HUST)
-*   **Copyright:** © 2026 Le Tri Dung. All rights reserved.
+*   **Authors:**
+    1.  **Lê Trí Dũng** (MSSV: 202414985)
+    2.  **Trương Quang Khánh** (MSSV: 202415008)
+    3.  **Lê Trung Kiên** (MSSV: 202415015)
+*   **Affiliation:** School of Electrical and Electronic Engineering, Hanoi University of Science and Technology (HUST)
+*   **Course:** Applied Software Engineering (Kỹ thuật Phần mềm Ứng dụng - ET3260Q), Class 166324
+*   **Instructor:** PGS. TS. Vũ Hải
+*   **Copyright:** © 2026. All rights reserved.
 *   **Citation Requirement:** If you utilize this codebase, the trained model weights, or the system architecture for academic research, graduation theses, papers, or coursework, you must cite this repository:
     ```bibtex
-    @misc{letridung2026energiamind,
-      author       = {Le Tri Dung},
-      title        = {EnergiaMind: An Enterprise Solar Monitoring and Anomaly Detection Platform using InceptionTime},
+    @misc{energiamind2026solar,
+      author       = {Le Tri Dung and Truong Quang Khanh and Le Trung Kien},
+      title        = {Web-based Real-time Monitoring, Fault Detection and Classification for Solar PV Systems using Convolutional Neural Networks},
       year         = {2026},
       publisher    = {GitHub},
       journal      = {GitHub Repository},
@@ -55,8 +59,8 @@
     *   *13-Feature Engineering*: Computes derived power values ($P_{dc1}, P_{dc2}, P_{total}$) and relative ratios/differences on raw values ($V_{ratio}, I_{ratio}, V_{diff}, I_{diff}$) to detect string-to-string mismatches.
     *   *InceptionTime Classifier*: A 6-layer 1D convolutional neural network (CNN) executed via `onnxruntime-node` utilizing its native C++ asynchronous thread pool to offload matrix computations and prevent blocking the Node.js main thread event loop.
     *   *Confidence-Gated Taxonomy*: Directly outputs a 5-class classification: **Normal (0), Short-Circuit (1), Degradation (2), Open Circuit (3), Shadowing (4)**. Uses a deterministic confidence threshold guardrail (confidence > 0.70) on the AI's predictions to eliminate false positives.
-*   **High-Volume Chart Downsampling (LTTB)**: Implements the **Largest-Triangle-Three-Buckets (LTTB)** algorithm on the frontend, allowing operators to pan, zoom, and analyze over 100,000 telemetry points on Apache ECharts without web browser latency.
-*   **Browser-Based Device Binding (1:1)**: Staff accounts are bound to a signature computed from high-entropy hardware characteristics (WebGL renderer, CPU cores, RAM, and screen resolution) available in the browser sandbox, hashed using SHA-256 upon first login.
+*   **Dynamic Server-Side Downsampling**: The backend dynamically downsamples telemetry queries using modulo-based row sampling when the result set exceeds 15,000 rows, achieving up to 300× query speedup while preserving statistical accuracy for chart rendering on Apache ECharts.
+*   **Browser-Based Device Binding (1:1)**: Staff accounts are bound to a structured hardware fingerprint computed from high-entropy browser characteristics (WebGL renderer, CPU cores, RAM, screen resolution, timezone, color depth, and touch points) collected on first login and stored server-side for subsequent verification.
 *   **Automated Incident Ticketing**: When the AI pipeline classifies a string fault, it immediately generates a database-tracked Alert, creates a Support Ticket, and broadcasts the event payload live to active browsers over WebSockets.
 
 ---
@@ -78,7 +82,7 @@
 │   │   ├── db/                 # Drizzle Schema, Migrations, Seed script
 │   │   ├── routes/             # REST endpoints (auth, telemetry, alerts)
 │   │   ├── services/           # Core business logic (ai, alert, modbus, telemetry)
-│   │   └── tests/              # 893 Vitest unit & integration test cases
+│   │   └── tests/              # 943 Vitest unit & integration test cases
 │   ├── models/                 # Pre-trained ONNX model files & metadata
 │   └── package.json
 ├── tools/                      # AI training & data engineering script files
@@ -296,12 +300,12 @@ The `tools/` directory contains the Python-based data engineering and machine le
     ```bash
     python tools/train_inception.py
     ```
-    *   *Action*: Trains InceptionTime (depth=6, filters=32) using PyTorch with Focal Loss ($\gamma=2.0$) to counter severe class imbalance. Achieves a test accuracy of **99.80%** and saves checkpoints to `server/models/inception_checkpoint.pt`.
+    *   *Action*: Trains InceptionTime (depth=6, filters=32) using PyTorch with Focal Loss ($\gamma=2.0$) to counter severe class imbalance. Achieves a test accuracy of **99.78%** (Micro Average) and saves checkpoints to `server/models/inception_checkpoint.pt`.
 3.  **Export to ONNX**: Convert the PyTorch checkpoint to ONNX:
     ```bash
     python tools/export_onnx.py
     ```
-    *   *Action*: Compiles the checkpoint into `inception_fault_classifier.onnx` and outputs `model_metadata.json` containing the MinMaxScaler ranges and class names.
+    *   *Action*: Compiles the checkpoint into `inception_fault_classifier.onnx` and outputs `model_metadata.json` (class names and model config) and `scaler_params.json` (MinMaxScaler ranges for inference normalization).
 
 ### 6.3 AI Model Performance Metrics
 
