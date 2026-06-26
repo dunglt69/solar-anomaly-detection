@@ -104,16 +104,16 @@ export async function getFaultTrend(from?: string, to?: string): Promise<FaultTr
 
   const rows = await db.all(sql`
     SELECT
-      DATE("timestamp", 'unixepoch', 'localtime') as date,
-      SUM(CASE WHEN fault_label = 1 THEN 1 ELSE 0 END) as shortCircuit,
-      SUM(CASE WHEN fault_label = 2 THEN 1 ELSE 0 END) as degradation,
-      SUM(CASE WHEN fault_label = 3 THEN 1 ELSE 0 END) as openCircuit,
-      SUM(CASE WHEN fault_label = 4 THEN 1 ELSE 0 END) as shadowing,
+      DATE(timestamp, 'unixepoch', 'localtime') as date,
+      SUM(CASE WHEN fault_type = 1 THEN 1 ELSE 0 END) as shortCircuit,
+      SUM(CASE WHEN fault_type = 2 THEN 1 ELSE 0 END) as degradation,
+      SUM(CASE WHEN fault_type = 3 THEN 1 ELSE 0 END) as openCircuit,
+      SUM(CASE WHEN fault_type = 4 THEN 1 ELSE 0 END) as shadowing,
       COUNT(*) as total
-    FROM telemetry
-    WHERE fault_label > 0 AND "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
-    GROUP BY DATE("timestamp", 'unixepoch', 'localtime')
-    ORDER BY DATE("timestamp", 'unixepoch', 'localtime')
+    FROM alerts
+    WHERE timestamp >= ${fromTs} AND timestamp <= ${toTs}
+    GROUP BY DATE(timestamp, 'unixepoch', 'localtime')
+    ORDER BY DATE(timestamp, 'unixepoch', 'localtime')
   `) as any[];
 
   return rows.map((r: any) => ({
@@ -157,12 +157,12 @@ export async function getSystemSummary(from?: string, to?: string): Promise<Syst
   `) as any[];
   const telStats = telStatsRows[0];
 
-  // Fault distribution
+  // Fault distribution computed from alerts (incidents)
   const faultDist = await db.all(sql`
-    SELECT fault_label as faultLabel, COUNT(*) as count
-    FROM telemetry
-    WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
-    GROUP BY fault_label
+    SELECT fault_type as faultLabel, COUNT(*) as count
+    FROM alerts
+    WHERE timestamp >= ${fromTs} AND timestamp <= ${toTs}
+    GROUP BY fault_type
   `) as any[];
 
   // Alert count by status (linking to ticket status and wasEscalated flag)
@@ -208,14 +208,14 @@ export async function getSystemSummary(from?: string, to?: string): Promise<Syst
   }
 
   const totalRecords = telStats?.totalRecords || 0;
-  const faultCount = Number(telStats?.faultCount) || 0;
+  const telemetryFaultCount = Number(telStats?.faultCount) || 0;
   const uptimePercent = totalRecords > 0
-    ? Math.round(((totalRecords - faultCount) / totalRecords) * 10000) / 100
+    ? Math.round(((totalRecords - telemetryFaultCount) / totalRecords) * 10000) / 100
     : 100;
 
   return {
     totalEnergyKwh: Math.round(totalEnergyKwh * 100) / 100,
-    totalFaults: faultCount,
+    totalFaults: totalAlerts, // Total faults is now equal to total alerts (incidents)
     totalAlerts,
     alertsByStatus,
     faultDistribution: faultDist.map((d: any) => ({
