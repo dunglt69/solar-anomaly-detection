@@ -14,5 +14,8 @@
     "build:server": "npm run build --workspace=server",
     "build:client": "npm run build --workspace=client",
     "test:server": "npm run test --workspace=server"
+  },
+  "dependencies": {
+    "docx": "^9.7.1"
   }
 }
