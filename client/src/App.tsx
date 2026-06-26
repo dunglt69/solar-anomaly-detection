@@ -32,7 +32,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
 
   if (isLoading) {
     return (
@@ -43,6 +43,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
+    if (user?.role === 'security_engineer') {
+      return <Navigate to="/admin" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -55,6 +58,22 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/dashboard" replace />;
   }
   return <>{children}</>;
+}
+
+function OperatorRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthStore();
+  if (user?.role === 'security_engineer') {
+    return <Navigate to="/admin" replace />;
+  }
+  return <>{children}</>;
+}
+
+function RootRedirect() {
+  const { user } = useAuthStore();
+  if (user?.role === 'security_engineer') {
+    return <Navigate to="/admin" replace />;
+  }
+  return <Navigate to="/dashboard" replace />;
 }
 
 export default function App() {
@@ -79,16 +98,16 @@ export default function App() {
             <Route path="/" element={
               <ProtectedRoute><DashboardLayout /></ProtectedRoute>
             }>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="alerts" element={<AlertsPage />} />
-              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route index element={<RootRedirect />} />
+              <Route path="dashboard" element={<OperatorRoute><DashboardPage /></OperatorRoute>} />
+              <Route path="alerts" element={<OperatorRoute><AlertsPage /></OperatorRoute>} />
+              <Route path="analytics" element={<OperatorRoute><AnalyticsPage /></OperatorRoute>} />
               <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
 
             {/* Fallback */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<RootRedirect />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

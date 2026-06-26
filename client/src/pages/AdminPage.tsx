@@ -207,6 +207,7 @@ function UsersTab() {
       const res = await authFetch(`${API}/admin/device-bindings/${userId}/reset`, {
         method: 'POST',
         headers: getHeaders(),
+        body: JSON.stringify({}),
       });
       if (res.ok) {
         fetchUsers();
@@ -225,6 +226,7 @@ function UsersTab() {
       const res = await authFetch(`${API}/admin/users/${userId}/unlock`, {
         method: 'POST',
         headers: getHeaders(),
+        body: JSON.stringify({}),
       });
       if (res.ok) {
         fetchUsers();
