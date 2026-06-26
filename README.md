@@ -300,7 +300,7 @@ The `tools/` directory contains the Python-based data engineering and machine le
     ```bash
     python tools/train_inception.py
     ```
-    *   *Action*: Trains InceptionTime (depth=6, filters=32) using PyTorch with Focal Loss ($\gamma=2.0$) to counter severe class imbalance. Achieves a test accuracy of **99.78%** (Micro Average) and saves checkpoints to `server/models/inception_checkpoint.pt`.
+    *   *Action*: Trains InceptionTime (depth=6, filters=32) using PyTorch with Focal Loss ($\gamma=2.0$) to counter severe class imbalance. Achieves a test accuracy of **99.80%** and saves checkpoints to `server/models/inception_checkpoint.pt`.
 3.  **Export to ONNX**: Convert the PyTorch checkpoint to ONNX:
     ```bash
     python tools/export_onnx.py
@@ -309,7 +309,7 @@ The `tools/` directory contains the Python-based data engineering and machine le
 
 ### 6.3 AI Model Performance Metrics
 
-The pre-trained InceptionTime model achieves a test accuracy of **99.78%** on the held-out test set (Days 15–16). Below is the comprehensive classification report containing **Micro (Accuracy), Macro, and Weighted** averages across all classes, along with per-class metrics:
+The pre-trained InceptionTime model achieves a test accuracy of **99.80%** on the held-out test set (Days 15–16). Below is the comprehensive classification report containing **Micro (Accuracy), Macro, and Weighted** averages across all classes, along with per-class metrics:
 
 | Metric | Precision | Recall | F1-Score | Support |
 | :--- | :---: | :---: | :---: | :---: |
@@ -318,7 +318,7 @@ The pre-trained InceptionTime model achieves a test accuracy of **99.78%** on th
 | **Degradation** | 0.9631 | 0.9899 | 0.9763 | 2,270 |
 | **Open Circuit** | 0.9946 | 0.9938 | 0.9942 | 2,410 |
 | **Shadowing** | 0.9940 | 0.9854 | 0.9897 | 14,908 |
-| **Micro Average (Accuracy)** | **0.9978** | **0.9978** | **0.9978** | **161,330** |
+| **Micro Average (Accuracy)** | **0.9980** | **0.9980** | **0.9980** | **161,330** |
 | **Macro Average** | **0.9806** | **0.9938** | **0.9870** | **161,330** |
 | **Weighted Average** | **0.9978** | **0.9978** | **0.9978** | **161,330** |
 
