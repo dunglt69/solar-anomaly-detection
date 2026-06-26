@@ -47,6 +47,21 @@ async function main() {
     },
   });
 
+  // Register custom application/json parser to handle empty bodies gracefully
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+    if (!body || body.trim() === '') {
+      done(null, {});
+      return;
+    }
+    try {
+      const json = JSON.parse(body);
+      done(null, json);
+    } catch (err: any) {
+      err.statusCode = 400;
+      done(err, undefined);
+    }
+  });
+
   // Production Gatekeeper Checks
   const isProd = process.env['NODE_ENV'] === 'production';
   if (isProd) {

@@ -90,6 +90,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           'Content-Type': 'application/json',
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
+        body: JSON.stringify({}),
         credentials: 'include',
       });
     } catch {
@@ -112,6 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
         credentials: 'include',
       });
 
