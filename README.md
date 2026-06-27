@@ -22,20 +22,15 @@
 
 ---
 
-## 1. Authors & Academic Affiliation
+## 1. Author & Academic Affiliation
 
-*   **Authors:**
-    1.  **Lê Trí Dũng** (MSSV: 202414985)
-    2.  **Trương Quang Khánh** (MSSV: 202415008)
-    3.  **Lê Trung Kiên** (MSSV: 202415015)
+*   **Author:** **Lê Trí Dũng** (MSSV: 202414985)
 *   **Affiliation:** School of Electrical and Electronic Engineering, Hanoi University of Science and Technology (HUST)
-*   **Course:** Applied Software Engineering (Kỹ thuật Phần mềm Ứng dụng - ET3260Q), Class 166324
-*   **Instructor:** PGS. TS. Vũ Hải
 *   **Copyright:** © 2026. All rights reserved.
 *   **Citation Requirement:** If you utilize this codebase, the trained model weights, or the system architecture for academic research, graduation theses, papers, or coursework, you must cite this repository:
     ```bibtex
     @misc{energiamind2026solar,
-      author       = {Le Tri Dung and Truong Quang Khanh and Le Trung Kien},
+      author       = {Le Tri Dung},
       title        = {Web-based Real-time Monitoring, Fault Detection and Classification for Solar PV Systems using Convolutional Neural Networks},
       year         = {2026},
       publisher    = {GitHub},
