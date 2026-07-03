@@ -31,7 +31,7 @@ Each of the 6 Inception modules performs a parallel branch convolution:
 4. **Concatenation & Normalization:** The outputs of the three multi-scale convolutions and the MaxPool branch are concatenated along the channel axis to produce $128$ channels ($32 \times 4$). This is followed by **Batch Normalization** and a **ReLU** activation.
 5. **Residual Skip Connection:** A residual shortcut maps the block input to the output. An identity mapping or a $1 \times 1$ Conv1D matching layer is added to the block output, followed by a final **ReLU** activation. (No residual connection is applied to the very first block).
 
-Sơ đồ cấu trúc bên trong của một Inception module:
+Inception module internal structure detail:
 
 ![Inception Module Structural Detail](diagrams/inception_module_inside.png)
 
@@ -68,7 +68,7 @@ The model receives a sliding window of **24 timesteps** (equivalent to 12 minute
 
 The 1D receptive field slides along the temporal axis of the 24 timesteps, extracting local features across all 13 channel dimensions simultaneously.
 
-Sơ đồ trực quan hóa trường thụ nhận (receptive field) của tích chập 1D qua thời gian:
+1D receptive field convolution over time:
 
 ![InceptionTime Receptive Field](diagrams/inception_receptive_field.png)
 
@@ -95,7 +95,7 @@ Sơ đồ trực quan hóa trường thụ nhận (receptive field) của tích 
 
 ---
 
-Sơ đồ tổng quan toàn bộ kiến trúc mạng InceptionTime:
+InceptionTime network architecture overview:
 
 ![InceptionTime Network Architecture Details](diagrams/inception_network_overview.png)
 
