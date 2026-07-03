@@ -31,30 +31,7 @@ Each of the 6 Inception modules performs a parallel branch convolution:
 4. **Concatenation & Normalization:** The outputs of the three multi-scale convolutions and the MaxPool branch are concatenated along the channel axis to produce $128$ channels ($32 \times 4$). This is followed by **Batch Normalization** and a **ReLU** activation.
 5. **Residual Skip Connection:** A residual shortcut maps the block input to the output. An identity mapping or a $1 \times 1$ Conv1D matching layer is added to the block output, followed by a final **ReLU** activation. (No residual connection is applied to the very first block).
 
-```mermaid
-graph TD
-    X[Input Channels: Cin] -->|1x1 Conv| Bottleneck[Bottleneck Channels: 32]
-    X -->|MaxPool1d kernel=3| MaxPool[MaxPool Branch]
-    
-    Bottleneck -->|Conv1d kernel=5| Conv5[Filters: 32]
-    Bottleneck -->|Conv1d kernel=11| Conv11[Filters: 32]
-    Bottleneck -->|Conv1d kernel=23| Conv23[Filters: 32]
-    MaxPool -->|1x1 Conv| ConvMP[Filters: 32]
-    
-    Conv5 --> Concatenate[Concatenate channels: 128]
-    Conv11 --> Concatenate
-    Conv23 --> Concatenate
-    ConvMP --> Concatenate
-    
-    Concatenate --> BatchNorm[Batch Normalization & ReLU]
-    X -->|1x1 Conv shortcut| Residual[Residual Connection]
-    BatchNorm --> Add[Element-wise Sum]
-    Residual --> Add
-    Add --> ReLU[ReLU Activation]
-    ReLU --> Output[Output Channels: 128]
-```
-
-Here is the structural schematic of the Inception module from the official paper:
+Sơ đồ cấu trúc bên trong của một Inception module:
 
 ![Inception Module Structural Detail](diagrams/inception_module_inside.png)
 
@@ -91,7 +68,7 @@ The model receives a sliding window of **24 timesteps** (equivalent to 12 minute
 
 The 1D receptive field slides along the temporal axis of the 24 timesteps, extracting local features across all 13 channel dimensions simultaneously.
 
-Here is the visualization of the 1D receptive field convolution over time:
+Sơ đồ trực quan hóa trường thụ nhận (receptive field) của tích chập 1D qua thời gian:
 
 ![InceptionTime Receptive Field](diagrams/inception_receptive_field.png)
 
@@ -118,36 +95,7 @@ Here is the visualization of the 1D receptive field convolution over time:
 
 ---
 
-## 5. Full Network Architecture
-
-The overall InceptionTime network consists of a stack of 6 Inception blocks, with residual skip connections wrapping around every 3 blocks (i.e. from the input of block 1 to the output of block 3, and from the input of block 4 to the output of block 6).
-
-```mermaid
-graph TD
-    Input[Input Data: B x 13 x 24] --> Block1[Inception Block 1]
-    Block1 --> Block2[Inception Block 2]
-    Block2 --> Block3[Inception Block 3]
-    
-    Input -->|Residual Connection 1| Add1((+))
-    Block3 --> Add1
-    Add1 --> Act1[ReLU Activation]
-    
-    Act1 --> Block4[Inception Block 4]
-    Block4 --> Block5[Inception Block 5]
-    Block5 --> Block6[Inception Block 6]
-    
-    Act1 -->|Residual Connection 2| Add2((+))
-    Block6 --> Add2
-    Add2 --> Act2[ReLU Activation]
-    
-    Act2 --> GAP[Global Average Pooling]
-    GAP --> Dropout[Dropout p=0.2]
-    Dropout --> Dense[Fully Connected Layer]
-    Dense --> Softmax[Softmax Activation]
-    Softmax --> Output[Output Probability Distribution: 5 Classes]
-```
-
-Below is the scientific model architecture diagram detailing the layer connections and data dimensions:
+Sơ đồ tổng quan toàn bộ kiến trúc mạng InceptionTime:
 
 ![InceptionTime Network Architecture Details](diagrams/inception_network_overview.png)
 
