@@ -409,7 +409,7 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
 
     try {
       const token = useAuthStore.getState().accessToken;
-      // BUG-009: Use WebSocket subprotocol for token instead of query string to avoid logging token in URLs
+      if (!token) return;
       ws = new WebSocket(WS_URL, [`bearer-${token}`]);
 
       ws.onopen = () => {

@@ -153,7 +153,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
   });
 
   // ─── POST /api/v1/auth/refresh ────────────────────────────────
-  fastify.post<{ Body: RefreshBody }>('/api/v1/auth/refresh', async (request, reply) => {
+  fastify.post<{ Body: RefreshBody }>('/api/v1/auth/refresh', {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: '1 minute',
+      },
+    },
+  }, async (request, reply) => {
     const refreshToken = request.body?.refreshToken || request.cookies?.['refreshToken'];
     if (!refreshToken) {
       return reply.code(400).send({ error: 'Refresh token required' });
@@ -214,8 +221,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
       body: {
         type: 'object',
         properties: {
-          displayName: { type: 'string', minLength: 1 },
-          email: { type: 'string', format: 'email' },
+          displayName: { type: 'string', minLength: 1, maxLength: 100 },
+          email: { type: 'string', format: 'email', maxLength: 254 },
         },
         additionalProperties: false,
       },
@@ -247,8 +254,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
         type: 'object',
         required: ['currentPassword', 'newPassword'],
         properties: {
-          currentPassword: { type: 'string' },
-          newPassword: { type: 'string', minLength: 8 },
+          currentPassword: { type: 'string', maxLength: 128 },
+          newPassword: { type: 'string', minLength: 8, maxLength: 128 },
         },
         additionalProperties: false,
       },

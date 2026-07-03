@@ -421,6 +421,8 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-01T10:00:00Z', faultLabel: 1 }),
         mkTel({ timestamp: '2026-06-01T11:00:00Z', faultLabel: 1 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-06-01T10:00:00Z') });
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-06-01T11:00:00Z') });
       const result = await getFaultTrend();
       expect(result).toHaveLength(1);
       expect(result[0]!.shortCircuit).toBe(2);
@@ -435,6 +437,9 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-01T11:00:00Z', faultLabel: 2 }),
         mkTel({ timestamp: '2026-06-01T12:00:00Z', faultLabel: 2 }),
       ]);
+      await insertAlert({ faultType: 2, timestamp: new Date('2026-06-01T10:00:00Z') });
+      await insertAlert({ faultType: 2, timestamp: new Date('2026-06-01T11:00:00Z') });
+      await insertAlert({ faultType: 2, timestamp: new Date('2026-06-01T12:00:00Z') });
       const result = await getFaultTrend();
       expect(result[0]!.degradation).toBe(3);
     });
@@ -443,6 +448,7 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
       await ingestTelemetry([
         mkTel({ timestamp: '2026-06-01T10:00:00Z', faultLabel: 3 }),
       ]);
+      await insertAlert({ faultType: 3, timestamp: new Date('2026-06-01T10:00:00Z') });
       const result = await getFaultTrend();
       expect(result[0]!.openCircuit).toBe(1);
     });
@@ -452,6 +458,8 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-01T10:00:00Z', faultLabel: 4 }),
         mkTel({ timestamp: '2026-06-01T11:00:00Z', faultLabel: 4 }),
       ]);
+      await insertAlert({ faultType: 4, timestamp: new Date('2026-06-01T10:00:00Z') });
+      await insertAlert({ faultType: 4, timestamp: new Date('2026-06-01T11:00:00Z') });
       const result = await getFaultTrend();
       expect(result[0]!.shadowing).toBe(2);
     });
@@ -464,6 +472,10 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: new Date(base + 120000).toISOString(), faultLabel: 3 }),
         mkTel({ timestamp: new Date(base + 180000).toISOString(), faultLabel: 4 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date(base) });
+      await insertAlert({ faultType: 2, timestamp: new Date(base + 60000) });
+      await insertAlert({ faultType: 3, timestamp: new Date(base + 120000) });
+      await insertAlert({ faultType: 4, timestamp: new Date(base + 180000) });
       const result = await getFaultTrend();
       expect(result).toHaveLength(1);
       expect(result[0]!.shortCircuit).toBe(1);
@@ -479,6 +491,9 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-02T12:00:00Z', faultLabel: 2 }),
         mkTel({ timestamp: '2026-06-03T12:00:00Z', faultLabel: 3 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-06-01T12:00:00Z') });
+      await insertAlert({ faultType: 2, timestamp: new Date('2026-06-02T12:00:00Z') });
+      await insertAlert({ faultType: 3, timestamp: new Date('2026-06-03T12:00:00Z') });
       const result = await getFaultTrend();
       expect(result).toHaveLength(3);
     });
@@ -489,6 +504,9 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-15T12:00:00Z', faultLabel: 2 }),
         mkTel({ timestamp: '2026-07-01T12:00:00Z', faultLabel: 3 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-05-01T12:00:00Z') });
+      await insertAlert({ faultType: 2, timestamp: new Date('2026-06-15T12:00:00Z') });
+      await insertAlert({ faultType: 3, timestamp: new Date('2026-07-01T12:00:00Z') });
       const result = await getFaultTrend('2026-06-01', '2026-06-30');
       expect(result).toHaveLength(1);
       expect(result[0]!.degradation).toBe(1);
@@ -506,6 +524,7 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
       await ingestTelemetry([
         mkTel({ timestamp: '2026-06-01T12:00:00Z', faultLabel: 1 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-06-01T12:00:00Z') });
       const result = await getFaultTrend();
       expect(result[0]!.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
@@ -517,6 +536,7 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-01T12:00:00Z', faultLabel: 0 }),
         mkTel({ timestamp: '2026-06-01T13:00:00Z', faultLabel: 0 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-06-01T11:00:00Z') });
       const result = await getFaultTrend();
       expect(result).toHaveLength(1);
       expect(result[0]!.total).toBe(1);
@@ -529,6 +549,9 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-01T12:00:00Z', faultLabel: 2 }),
         mkTel({ timestamp: '2026-06-02T12:00:00Z', faultLabel: 3 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-06-03T12:00:00Z') });
+      await insertAlert({ faultType: 2, timestamp: new Date('2026-06-01T12:00:00Z') });
+      await insertAlert({ faultType: 3, timestamp: new Date('2026-06-02T12:00:00Z') });
       const result = await getFaultTrend();
       expect(result).toHaveLength(3);
       expect(result[0]!.date < result[1]!.date).toBe(true);
@@ -567,6 +590,8 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-01T12:00:00Z', faultLabel: 2 }),
         mkTel({ timestamp: '2026-06-01T13:00:00Z', faultLabel: 0 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-06-01T11:00:00Z') });
+      await insertAlert({ faultType: 2, timestamp: new Date('2026-06-01T12:00:00Z') });
       const result = await getSystemSummary();
       expect(result.totalFaults).toBe(2);
     });
@@ -657,6 +682,9 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-01T11:00:00Z', faultLabel: 1 }),
         mkTel({ timestamp: '2026-06-01T12:00:00Z', faultLabel: 2 }),
       ]);
+      await insertAlert({ faultType: 0, timestamp: new Date('2026-06-01T10:00:00Z') });
+      await insertAlert({ faultType: 1, timestamp: new Date('2026-06-01T11:00:00Z') });
+      await insertAlert({ faultType: 2, timestamp: new Date('2026-06-01T12:00:00Z') });
       const result = await getSystemSummary();
       const labels = result.faultDistribution.map(d => d.label);
       expect(labels).toContain('Normal');
@@ -669,6 +697,8 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: '2026-06-01T10:00:00Z', faultLabel: 3 }),
         mkTel({ timestamp: '2026-06-01T11:00:00Z', faultLabel: 4 }),
       ]);
+      await insertAlert({ faultType: 3, timestamp: new Date('2026-06-01T10:00:00Z') });
+      await insertAlert({ faultType: 4, timestamp: new Date('2026-06-01T11:00:00Z') });
       const result = await getSystemSummary();
       const codes = result.faultDistribution.map(d => d.code);
       expect(codes).toContain(3);
@@ -723,6 +753,10 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         mkTel({ timestamp: new Date(base + 120000).toISOString(), faultLabel: 1 }),
         mkTel({ timestamp: new Date(base + 180000).toISOString(), faultLabel: 2 }),
       ]);
+      await insertAlert({ faultType: 1, timestamp: new Date(base) });
+      await insertAlert({ faultType: 1, timestamp: new Date(base + 60000) });
+      await insertAlert({ faultType: 1, timestamp: new Date(base + 120000) });
+      await insertAlert({ faultType: 2, timestamp: new Date(base + 180000) });
       const result = await getSystemSummary();
       const sc = result.faultDistribution.find(d => d.code === 1);
       const deg = result.faultDistribution.find(d => d.code === 2);
@@ -762,6 +796,9 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         faultLabel: i % 10 === 0 ? 1 : 0,
       }));
       await ingestTelemetry(batch);
+      for (let i = 0; i < 1000; i += 10) {
+        await insertAlert({ faultType: 1, timestamp: new Date(baseTime + i * 60000) });
+      }
 
       const summary = await getSystemSummary();
       expect(summary.totalFaults).toBe(100); // every 10th record
@@ -812,6 +849,9 @@ describe('Analytics Comprehensive Test Suite (~80 Cases)', () => {
         faultLabel: ((i % 4) + 1),  // cycles through 1,2,3,4
       }));
       await ingestTelemetry(batch);
+      for (let i = 0; i < 10; i++) {
+        await insertAlert({ faultType: ((i % 4) + 1), timestamp: new Date(base + i * 60000) });
+      }
 
       const summary = await getSystemSummary();
       expect(summary.uptimePercent).toBe(0);

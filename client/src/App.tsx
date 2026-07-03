@@ -7,6 +7,7 @@ import './styles/index.css';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const AccessDeniedPage = lazy(() => import('./pages/AccessDeniedPage'));
+const BlockedPage = lazy(() => import('./pages/BlockedPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const AlertsPage = lazy(() => import('./pages/AlertsPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
@@ -93,6 +94,7 @@ export default function App() {
               <PublicRoute><LoginPage /></PublicRoute>
             } />
             <Route path="/access-denied" element={<AccessDeniedPage />} />
+            <Route path="/blocked" element={<BlockedPage />} />
 
             {/* Protected */}
             <Route path="/" element={

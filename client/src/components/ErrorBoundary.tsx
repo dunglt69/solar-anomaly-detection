@@ -19,7 +19,8 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <div style={{ padding: '2rem', textAlign: 'center', color: '#e2e8f0', background: '#0a0e1a', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Something went wrong</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>{this.state.error?.message}</p>
+          <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>An unexpected error occurred. Please refresh the page or contact support.</p>
+          {import.meta.env.DEV && <pre style={{ color: '#f87171', textAlign: 'left', overflow: 'auto', maxHeight: '200px', fontSize: '0.85rem', padding: '1rem', background: '#1e293b', borderRadius: '6px' }}>{this.state.error?.message}</pre>}
           <button onClick={() => window.location.reload()} style={{ padding: '0.5rem 1.5rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Reload</button>
         </div>
       );

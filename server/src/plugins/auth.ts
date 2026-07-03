@@ -28,7 +28,7 @@ async function authPlugin(fastify: FastifyInstance) {
       request.user = await verifyAccessToken(token);
       
       // Update lastSeenAt for the user's bound device asynchronously
-      db.update(registeredDevices)
+      void db.update(registeredDevices)
         .set({ lastSeenAt: new Date() })
         .where(eq(registeredDevices.userId, request.user.sub))
         .catch(err => {

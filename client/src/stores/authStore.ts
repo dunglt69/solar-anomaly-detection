@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { API_BASE } from '../lib/api';
+import { API_BASE, setAccessTokenGetter } from '../lib/api';
 
 
 interface User {
@@ -62,8 +62,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(data.error || 'Login failed');
       }
 
-      // TODO: Move access token to memory-only storage to mitigate XSS token theft
-      localStorage.setItem('accessToken', data.accessToken);
+
 
       set({
         user: data.user,
@@ -97,7 +96,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Proceed with local cleanup even if API call fails
     }
 
-    localStorage.removeItem('accessToken');
+
     set({
       user: null,
       accessToken: null,
@@ -122,7 +121,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       const data = await res.json();
-      localStorage.setItem('accessToken', data.accessToken);
+
 
       // Fetch user profile with new token
       const meRes = await fetch(`${API_BASE}/api/v1/auth/me`, {
@@ -142,7 +141,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       throw new Error('Failed to fetch profile');
     } catch {
-      localStorage.removeItem('accessToken');
+
       set({
         user: null,
         accessToken: null,
@@ -160,3 +159,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return { user: { ...state.user, ...updatedUser } };
   }),
 }));
+
+setAccessTokenGetter(() => useAuthStore.getState().accessToken);

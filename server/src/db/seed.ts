@@ -75,7 +75,10 @@ export async function seed() {
     const credsPath = path.resolve(process.cwd(), '.admin_credentials.tmp');
     fs.writeFileSync(credsPath, `Username: ${ADMIN_USERNAME}\nPassword: ${finalPassword}\n`, 'utf-8');
     console.log(`⚠️  Generated admin password has been written to: ${credsPath}`);
-    console.log('   Please check this file and delete it after logging in.');
+    console.log('   This file will be auto-deleted in 60 seconds. Log in before then.');
+    setTimeout(() => {
+      try { fs.unlinkSync(credsPath); console.log('🗑️  Credentials file auto-deleted.'); } catch { /* already deleted */ }
+    }, 60_000);
   }
   console.log('Seeded admin user: EM-0001');
   console.log('Seeded default system config.');

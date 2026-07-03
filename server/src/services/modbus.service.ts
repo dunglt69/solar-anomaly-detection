@@ -114,11 +114,17 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
   let pollCount = 0;
   let errorCount = 0;
 
-  const pollIntervalId = setInterval(async () => {
+  let pollTimerId: ReturnType<typeof setTimeout> | null = null;
+  let pollStopped = false;
+
+  async function poll() {
+    if (pollStopped) return;
+
     const isConnected = await ensureConnected();
     if (!isConnected) {
       errorCount++;
       console.error(`[Modbus] ❌ Poll error (${errorCount}): Port Not Open (reconnect pending)`);
+      pollTimerId = setTimeout(poll, config.interval);
       return;
     }
 
@@ -202,10 +208,17 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
         } catch (_) {}
       }
     }
-  }, config.interval);
+
+    if (!pollStopped) {
+      pollTimerId = setTimeout(poll, config.interval);
+    }
+  }
+
+  pollTimerId = setTimeout(poll, config.interval);
 
   stopModbusPoller = () => {
-    clearInterval(pollIntervalId);
+    pollStopped = true;
+    if (pollTimerId !== null) clearTimeout(pollTimerId);
     try { client.close(() => {}); } catch (_) {}
   };
 

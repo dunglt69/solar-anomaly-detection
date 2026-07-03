@@ -164,27 +164,44 @@ App
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
+| GET | `/api/health` | Public | Health check (`{ status, timestamp }`) |
 | POST | `/api/v1/auth/login` | Public | Returns access + refresh tokens |
-| POST | `/api/v1/auth/register` | Admin | Create new user |
-| POST | `/api/v1/auth/refresh` | Refresh | Rotate tokens |
+| POST | `/api/v1/auth/refresh` | Refresh | Rotate tokens (rate limited: 10/min) |
 | POST | `/api/v1/auth/logout` | Auth | Invalidate session |
-| POST | `/api/v1/telemetry` | API Key | Batch ingest telemetry |
+| GET | `/api/v1/auth/me` | Auth | Get current user profile |
+| PATCH | `/api/v1/auth/profile` | Auth | Update display name / email |
+| PATCH | `/api/v1/auth/password` | Auth | Change password |
+| POST | `/api/v1/telemetry` | Auth | Batch ingest telemetry |
 | GET | `/api/v1/telemetry` | Auth | Query with time range + aggregation |
 | GET | `/api/v1/telemetry/latest` | Auth | Latest readings |
+| GET | `/api/v1/telemetry/aggregated` | Auth | Aggregated telemetry by interval |
+| GET | `/api/v1/telemetry/data-range` | Auth | Data date range (min/max) |
+| GET | `/api/v1/telemetry/kpis` | Auth | Telemetry KPIs |
+| GET | `/api/v1/telemetry/daily-yield-today` | Auth | Today's energy yield |
+| GET | `/api/v1/detection-status` | Auth | AI detection engine status |
 | GET | `/api/v1/alerts` | Auth | List alerts (paginated, filterable) |
+| GET | `/api/v1/alerts/stats` | Auth | Alert statistics |
 | PATCH | `/api/v1/alerts/:id` | Auth | Acknowledge alert |
 | GET | `/api/v1/tickets` | Auth | List tickets |
+| GET | `/api/v1/tickets/:id` | Auth | Get ticket by ID |
+| GET | `/api/v1/tickets/stats` | Auth | Ticket statistics |
 | POST | `/api/v1/tickets` | Auth | Create ticket |
-| PATCH | `/api/v1/tickets/:id` | Auth | Update status/assignee |
-| POST | `/api/v1/tickets/:id/comments` | Auth | Add comment |
+| PATCH | `/api/v1/tickets/:id` | Auth | Update status/assignee (IDOR-protected) |
+| POST | `/api/v1/tickets/:id/comments` | Auth | Add comment (max 5000 chars) |
+| GET | `/api/v1/analytics/daily-energy` | Auth | Daily energy data |
+| GET | `/api/v1/analytics/hourly-profile` | Auth | Hourly generation profile |
+| GET | `/api/v1/analytics/fault-trend` | Auth | Fault trend by type |
+| GET | `/api/v1/analytics/summary` | Auth | System summary |
 | GET | `/api/v1/users` | Admin | List users |
 | POST | `/api/v1/users` | Admin | Create user |
 | PATCH | `/api/v1/users/:id` | Admin | Update user |
-| GET | `/api/v1/activity-log` | Admin | Audit log |
+| DELETE | `/api/v1/users/:id` | Admin | Delete user |
+| GET | `/api/v1/activity-log` | Admin / Security | Audit log |
 | GET | `/api/v1/config` | Admin | System settings |
 | PATCH | `/api/v1/config` | Admin | Update settings |
 | POST | `/api/v1/admin/users/:id/unlock` | Admin | Unlock a locked user account |
-| POST | `/api/v1/admin/device-bindings/:userId/reset` | Admin | Reset device binding for an employee |
+| GET | `/api/v1/admin/device-bindings` | Admin | List device bindings |
+| POST | `/api/v1/admin/device-bindings/:userId/reset` | Admin | Reset device binding |
 
 ### WebSocket
 
@@ -256,7 +273,7 @@ Production (Future):
 ## 8. Verification & Performance Benchmarks
 
 ### 8.1 Automated Test Suite
-The platform includes **138 test cases** running via Vitest, covering:
+The platform includes a comprehensive test suite running via Vitest, covering:
 - **Authentication**: Lockout cycles, Timing attack defenses, Single session constraints, and Refresh Token Rotation (RTR).
 - **Employee Device Binding**: First-login auto-registration, validation of hardware signature components, minor hardware drift auto-updates, and admin-triggered device resets.
 - **Access Control**: Role-based access validation, account lockout, and admin-triggered unlock actions.

@@ -6,6 +6,7 @@ import {
 import './SettingsPage.css';
 
 import { API_BASE } from '../lib/api';
+import { authFetch } from '../lib/authFetch';
 
 
 interface UserProfile {
@@ -69,11 +70,10 @@ export default function SettingsPage() {
     if (!accessToken) return;
     setSaving(true);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/auth/profile`, {
+      const res = await authFetch(`${API_BASE}/api/v1/auth/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           displayName: profile.displayName,
@@ -179,11 +179,10 @@ export default function SettingsPage() {
     }
     setPasswordSaving(true);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/auth/password`, {
+      const res = await authFetch(`${API_BASE}/api/v1/auth/password`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           currentPassword,

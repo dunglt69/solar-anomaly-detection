@@ -77,7 +77,7 @@
 │   │   ├── db/                 # Drizzle Schema, Migrations, Seed script
 │   │   ├── routes/             # REST endpoints (auth, telemetry, alerts)
 │   │   ├── services/           # Core business logic (ai, alert, modbus, telemetry)
-│   │   └── tests/              # 943 Vitest unit & integration test cases
+│   │   └── tests/              # Vitest unit & integration test cases
 │   ├── models/                 # Pre-trained ONNX model files & metadata
 │   └── package.json
 ├── tools/                      # AI training & data engineering script files
@@ -166,7 +166,7 @@ npm run dev:client
     ```bash
     npm run db:migrate && npm run db:seed
     ```
-    *   *Default Admin Credentials:* Username: `admin` / Password: `Admin@123`
+    *   *Default Admin Credentials:* Username: `admin` / Password: set via `ADMIN_PASSWORD` environment variable in `.env`
     *   *What this does:* Executes Drizzle ORM compiled migration files sequentially to guarantee schema integrity, then seeds the default configurations and the initial Admin user.
 4.  Run the backend server in development mode:
     ```bash
@@ -238,7 +238,7 @@ If you want to share a live showcase of this application securely with teachers 
 <details>
 <summary><b>🧪 Step 6: Running the Test Suite</b></summary>
 
-To verify system integrity and execution safety before deployment, run the automated test matrix (893 test cases covering REST endpoints, WebSocket event propagation, and JWT state machines):
+To verify system integrity and execution safety before deployment, run the automated test suite covering REST endpoints, WebSocket event propagation, and JWT state machines:
 ```bash
 # Run tests directly via npm workspace
 npm run test:server

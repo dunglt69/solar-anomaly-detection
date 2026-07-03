@@ -173,7 +173,7 @@ async function main() {
   };
 
   const server = new ModbusRTU.ServerTCP(vector, {
-    host: '0.0.0.0',
+    host: '127.0.0.1',
     port: MODBUS_PORT,
     debug: false,
     unitID: 1,
@@ -184,7 +184,7 @@ async function main() {
     console.error('  ⚠️  [Modbus Server] Socket error:', err.message);
   });
 
-  console.log(`\n📡 Modbus TCP Slave listening on 0.0.0.0:${MODBUS_PORT}`);
+  console.log(`\n📡 Modbus TCP Slave listening on 127.0.0.1:${MODBUS_PORT}`);
   console.log(`   Waiting for Master to connect...\n`);
 
   // ─── CSV stepper — advance registers every INTERVAL_MS ──────────

@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import crypto from 'node:crypto';
 import fastifyStatic from '@fastify/static';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -29,7 +30,12 @@ const HOST = process.env['HOST'] || '127.0.0.1';
 
 async function main() {
   const app = Fastify({
-    trustProxy: true, // Parse proxy headers like CF-Connecting-IP / X-Forwarded-For
+    ajv: {
+      customOptions: {
+        removeAdditional: false,
+      },
+    },
+    trustProxy: process.env['TRUST_PROXY'] === 'true' ? true : Number(process.env['TRUST_PROXY']) || 1,
     logger: {
       level: process.env['LOG_LEVEL'] || 'info',
       redact: [
@@ -49,12 +55,13 @@ async function main() {
 
   // Register custom application/json parser to handle empty bodies gracefully
   app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
-    if (!body || body.trim() === '') {
+    const bodyStr = typeof body === 'string' ? body : body.toString();
+    if (!bodyStr || bodyStr.trim() === '') {
       done(null, {});
       return;
     }
     try {
-      const json = JSON.parse(body);
+      const json = JSON.parse(bodyStr);
       done(null, json);
     } catch (err: any) {
       err.statusCode = 400;
@@ -93,7 +100,7 @@ async function main() {
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         imgSrc: ["'self'", "data:", "blob:"],
         fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-        connectSrc: ["'self'", "ws:", "wss:", "https://challenges.cloudflare.com"], // Allow websockets & Turnstile verify
+        connectSrc: ["'self'", "ws:", "wss:", "https://challenges.cloudflare.com", "https://static.cloudflareinsights.com"],
         frameSrc: ["'self'", "https://challenges.cloudflare.com"], // Allow Turnstile iframe
         objectSrc: ["'none'"],
       }
@@ -106,10 +113,11 @@ async function main() {
     max: 300,
     timeWindow: '1 minute',
     allowList: (req: FastifyRequest) => {
-      // Allow bypass for local requests (development/local scanning)
-      const ip = req.ip;
-      if (ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') {
-        return true;
+      if (!isProd) {
+        const ip = req.ip;
+        if (ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') {
+          return true;
+        }
       }
       const bypassKey = process.env['RATE_LIMIT_BYPASS_KEY'];
       if (bypassKey && req.headers['x-bypass-rate-limit'] === bypassKey) {
@@ -138,7 +146,7 @@ async function main() {
   });
 
   await app.register(cookie, {
-    secret: process.env['COOKIE_SECRET'] || 'dev-cookie-secret-' + Date.now(),
+    secret: process.env['COOKIE_SECRET'] || crypto.randomBytes(32).toString('hex'),
   });
 
   await app.register(authPlugin);

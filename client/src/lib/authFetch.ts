@@ -37,7 +37,7 @@ export async function authFetch(url: string | URL, init?: RequestInit): Promise<
     headers.set('X-Device-Info', JSON.stringify(getDeviceInfo()));
   } catch { /* ignored */ }
 
-  const res = await fetch(url, { ...init, headers });
+  const res = await fetch(url, { ...init, headers, credentials: 'include' });
 
   // 403 — blocked IP or device → redirect to blocked page
   if (res.status === 403) {
@@ -62,7 +62,7 @@ export async function authFetch(url: string | URL, init?: RequestInit): Promise<
         resolve: async (newToken: string) => {
           headers.set('Authorization', `Bearer ${newToken}`);
           try {
-            resolve(await fetch(url, { ...init, headers }));
+            resolve(await fetch(url, { ...init, headers, credentials: 'include' }));
           } catch (err) {
             reject(err);
           }
@@ -79,7 +79,7 @@ export async function authFetch(url: string | URL, init?: RequestInit): Promise<
       const newToken = useAuthStore.getState().accessToken!;
       processQueue(newToken, null);
       headers.set('Authorization', `Bearer ${newToken}`);
-      return fetch(url, { ...init, headers });
+      return fetch(url, { ...init, headers, credentials: 'include' });
     } else {
       const err = new Error('Session expired');
       processQueue(null, err);

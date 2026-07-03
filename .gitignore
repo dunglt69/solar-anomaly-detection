@@ -99,4 +99,6 @@ latex-compiler/
 # Raw & processed training datasets
 tools/data/
 
+# Google site verification files
+google*.html
 

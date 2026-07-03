@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useAuthStore } from '../stores/authStore';
+
 import { authFetch } from '../lib/authFetch';
 import Chart from '../components/charts/Chart';
 import { CHART_THEME } from '../lib/chartConstants';
@@ -53,13 +53,7 @@ const RANGES: { key: RangeKey; label: string; days: number }[] = [
   { key: '90d', label: '90 Days', days: 90 },
 ];
 
-function getHeaders(): Record<string, string> {
-  const token = useAuthStore.getState().accessToken;
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  };
-}
+
 
 function getRange(days: number) {
   const to = new Date();
@@ -93,14 +87,12 @@ export default function AnalyticsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const params = `from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-    const headers = getHeaders();
-
     try {
       const [energyRes, faultRes, summaryRes, hourlyRes] = await Promise.all([
-        authFetch(`${API}/api/v1/analytics/daily-energy?${params}`, { headers }),
-        authFetch(`${API}/api/v1/analytics/fault-trend?${params}`, { headers }),
-        authFetch(`${API}/api/v1/analytics/summary?${params}`, { headers }),
-        authFetch(`${API}/api/v1/analytics/hourly-profile?date=${new Date().toISOString().split('T')[0]}`, { headers }),
+        authFetch(`${API}/api/v1/analytics/daily-energy?${params}`),
+        authFetch(`${API}/api/v1/analytics/fault-trend?${params}`),
+        authFetch(`${API}/api/v1/analytics/summary?${params}`),
+        authFetch(`${API}/api/v1/analytics/hourly-profile?date=${new Date().toISOString().split('T')[0]}`),
       ]);
 
       if (energyRes.ok) {

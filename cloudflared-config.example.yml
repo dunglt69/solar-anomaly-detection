@@ -32,7 +32,7 @@ ingress:
 
   # Route all other traffic to the React Frontend (Vite dev server or production preview)
   - hostname: energiamind.yourdomain.com
-    service: http://localhost:5173
+    service: http://localhost:3000
 
   # Catch-all rule for any other requests (returns 404)
   - service: http_status:404

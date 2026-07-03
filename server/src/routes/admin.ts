@@ -38,12 +38,12 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         type: 'object',
         required: ['username', 'email', 'personalEmail', 'dob', 'displayName', 'password', 'role'],
         properties: {
-          username: { type: 'string', minLength: 3 },
-          email: { type: 'string', format: 'email' },
-          personalEmail: { type: 'string', format: 'email' },
+          username: { type: 'string', minLength: 3, maxLength: 50 },
+          email: { type: 'string', format: 'email', maxLength: 254 },
+          personalEmail: { type: 'string', format: 'email', maxLength: 254 },
           dob: { type: 'string', minLength: 1 },
-          displayName: { type: 'string', minLength: 1 },
-          password: { type: 'string', minLength: 8 },
+          displayName: { type: 'string', minLength: 1, maxLength: 100 },
+          password: { type: 'string', minLength: 8, maxLength: 128 },
           role: { type: 'string', enum: ['admin', 'solar_operator', 'security_engineer'] },
         },
       },
@@ -96,11 +96,11 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       body: {
         type: 'object',
         properties: {
-          displayName: { type: 'string', minLength: 1 },
-          email: { type: 'string', format: 'email' },
-          personalEmail: { type: 'string', format: 'email' },
+          displayName: { type: 'string', minLength: 1, maxLength: 100 },
+          email: { type: 'string', format: 'email', maxLength: 254 },
+          personalEmail: { type: 'string', format: 'email', maxLength: 254 },
           dob: { type: 'string', minLength: 1 },
-          password: { type: 'string', minLength: 8 },
+          password: { type: 'string', minLength: 8, maxLength: 128 },
           role: { type: 'string', enum: ['admin', 'solar_operator', 'security_engineer'] },
         },
       },
@@ -153,6 +153,15 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   // ─── GET /api/v1/activity-log — Query activity log ────────────
   fastify.get<{ Querystring: ActivityLogQuery }>('/api/v1/activity-log', {
     preHandler: [fastify.authenticate, fastify.requireSecurityOrAdmin],
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'integer', minimum: 1, maximum: 200 },
+          offset: { type: 'integer', minimum: 0 },
+        },
+      },
+    },
   }, async (request, reply) => {
     const result = await queryActivityLog(request.query);
     return reply.send(result);

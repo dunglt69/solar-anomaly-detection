@@ -17,8 +17,14 @@ const getApiBase = () => {
 const API_BASE = getApiBase();
 export const API_V1 = `${API_BASE}/api/v1`;
 
+let _getAccessToken: (() => string | null) | null = null;
+
+export function setAccessTokenGetter(getter: () => string | null) {
+  _getAccessToken = getter;
+}
+
 export function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem('accessToken');
+  const token = _getAccessToken ? _getAccessToken() : null;
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

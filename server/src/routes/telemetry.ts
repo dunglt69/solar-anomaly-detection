@@ -55,7 +55,7 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
 
 
     // Run AI detection pipeline for each reading.
-    // The detection service internally applies Z-score, domain rules, and InceptionTime.
+    // The detection service applies InceptionTime ONNX model for fault detection.
     const runAsync = request.body.length > 100;
     const processReadings = async () => {
     for (const point of request.body) {
@@ -144,7 +144,7 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
     if (raw <= 0 || !Number.isFinite(raw)) {
       return reply.status(400).send({ error: 'Parameter n must be a positive number' });
     }
-    const n = Math.min(raw, 10000);
+    const n = Math.min(raw, 2000);
     const rows = await getLatestTelemetry(n);
     return reply.send({ data: rows.reverse(), count: rows.length });
   });

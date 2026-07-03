@@ -22,7 +22,16 @@ export default async function configRoutes(fastify: FastifyInstance) {
     schema: {
       body: {
         type: 'object',
-        additionalProperties: true,
+        properties: {
+          detection_sensitivity: {},
+          alert_cooldown_minutes: {},
+          modbus_poll_interval: {},
+          maintenance_mode: {},
+          notification_email: { type: 'string', maxLength: 254 },
+          auto_acknowledge_info: {},
+          dashboard_refresh_interval: {},
+        },
+        additionalProperties: false,
       },
     },
   }, async (request, reply) => {

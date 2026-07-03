@@ -20,6 +20,7 @@ export function wsBroadcast(data: unknown) {
 async function wsPlugin(fastify: FastifyInstance) {
   await fastify.register(websocket, {
     options: {
+      maxPayload: 1024 * 64,
       handleProtocols: (protocols: Set<string> | string[]) => {
         const list = protocols instanceof Set ? [...protocols] : protocols;
         const bearer = list.find((p: string) => p.startsWith('bearer-'));
@@ -31,7 +32,7 @@ async function wsPlugin(fastify: FastifyInstance) {
   // Register broadcast function with telemetry routes
   setBroadcast(wsBroadcast);
 
-  // WebSocket route — requires ?token=<JWT> for authentication
+  // WebSocket route — requires bearer-<JWT> subprotocol for authentication
   fastify.get('/ws/telemetry', { 
     websocket: true,
     config: {
@@ -41,10 +42,8 @@ async function wsPlugin(fastify: FastifyInstance) {
       }
     }
   }, async (socket, request) => {
-    // BUG-009: Support token via subprotocol (bearer-<token>) in addition to query param
-    const url = new URL(request.url, `https://${request.headers.host || 'localhost'}`);
     const protocol = request.headers['sec-websocket-protocol'] as string | undefined;
-    const token = url.searchParams.get('token') || (protocol?.startsWith('bearer-') ? protocol.slice(7) : null);
+    const token = protocol?.startsWith('bearer-') ? protocol.slice(7) : null;
 
     if (!token) {
       socket.send(JSON.stringify({ type: 'error', message: 'Missing authentication token' }));

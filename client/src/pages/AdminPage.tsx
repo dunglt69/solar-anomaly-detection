@@ -87,7 +87,7 @@ function UsersTab() {
   const [creating, setCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  const currentUser = useAuthStore.getState().user;
+  const currentUser = useAuthStore(s => s.user);
 
   const fetchUsers = async () => {
     try {
@@ -105,7 +105,7 @@ function UsersTab() {
     const timer = setTimeout(() => {
       fetchUsers();
     }, 0);
-    const interval = setInterval(fetchUsers, 5000);
+    const interval = setInterval(fetchUsers, 30000);
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
@@ -592,7 +592,7 @@ function ActivityLogTab() {
 
 // ─── Main Admin Page ────────────────────────────────────────────────
 export default function AdminPage() {
-  const user = useAuthStore.getState().user;
+  const user = useAuthStore(s => s.user);
   const isSecurity = user?.role === 'security_engineer';
   const [tab, setTab] = useState<'users' | 'logs'>(isSecurity ? 'logs' : 'users');
 

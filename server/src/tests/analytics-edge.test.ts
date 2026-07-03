@@ -271,31 +271,42 @@ describe('Analytics Edge Cases — Extended Test Suite', () => {
   // ─── SECTION 6: Fault Distribution Tests (3 tests) ───────────────
   describe('Fault Distribution & Uptime', () => {
     it('getSystemSummary with multiple fault types → correct distribution', async () => {
-      const baseTime = new Date('2026-06-01T12:00:00Z').getTime();
+      const baseTime = new Date('2026-06-01T12:00:00Z');
+      const baseUnix = Math.floor(baseTime.getTime() / 1000);
+
       await ingestTelemetry([
-        { timestamp: new Date(baseTime).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 1 },
-        { timestamp: new Date(baseTime + 60000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 2 },
-        { timestamp: new Date(baseTime + 120000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 3 },
-        { timestamp: new Date(baseTime + 180000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 4 },
-        { timestamp: new Date(baseTime + 240000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 0 },
+        { timestamp: new Date(baseTime.getTime()).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 1 },
+        { timestamp: new Date(baseTime.getTime() + 60000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 2 },
+        { timestamp: new Date(baseTime.getTime() + 120000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 3 },
+        { timestamp: new Date(baseTime.getTime() + 180000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 4 },
+        { timestamp: new Date(baseTime.getTime() + 240000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 0 },
+      ]);
+
+      await db.insert(alerts).values([
+        { id: 'a1', timestamp: new Date(baseUnix * 1000), severity: 'warning', faultType: 1, confidence: 0.9, detectionLayer: 'ai' },
+        { id: 'a2', timestamp: new Date((baseUnix + 60) * 1000), severity: 'warning', faultType: 2, confidence: 0.9, detectionLayer: 'ai' },
+        { id: 'a3', timestamp: new Date((baseUnix + 120) * 1000), severity: 'critical', faultType: 3, confidence: 0.95, detectionLayer: 'ai' },
+        { id: 'a4', timestamp: new Date((baseUnix + 180) * 1000), severity: 'warning', faultType: 4, confidence: 0.85, detectionLayer: 'ai' },
       ]);
 
       const summary = await getSystemSummary();
       expect(summary.totalFaults).toBe(4);
-      expect(summary.faultDistribution.length).toBeGreaterThanOrEqual(2); // At least normal + fault entries
+      expect(summary.faultDistribution.length).toBeGreaterThanOrEqual(2);
     });
 
     it('getFaultTrend with all 4 fault types → each counted correctly', async () => {
-      const baseTime = new Date('2026-06-01T12:00:00Z').getTime();
-      await ingestTelemetry([
-        { timestamp: new Date(baseTime).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 1 },
-        { timestamp: new Date(baseTime + 60000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 2 },
-        { timestamp: new Date(baseTime + 120000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 3 },
-        { timestamp: new Date(baseTime + 180000).toISOString(), vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30, faultLabel: 4 },
+      const baseTime = new Date('2026-06-01T12:00:00Z');
+      const baseUnix = Math.floor(baseTime.getTime() / 1000);
+
+      await db.insert(alerts).values([
+        { id: 'a1', timestamp: new Date(baseUnix * 1000), severity: 'warning', faultType: 1, confidence: 0.9, detectionLayer: 'ai' },
+        { id: 'a2', timestamp: new Date((baseUnix + 60) * 1000), severity: 'warning', faultType: 2, confidence: 0.9, detectionLayer: 'ai' },
+        { id: 'a3', timestamp: new Date((baseUnix + 120) * 1000), severity: 'critical', faultType: 3, confidence: 0.95, detectionLayer: 'ai' },
+        { id: 'a4', timestamp: new Date((baseUnix + 180) * 1000), severity: 'warning', faultType: 4, confidence: 0.85, detectionLayer: 'ai' },
       ]);
 
       const trend = await getFaultTrend();
-      expect(trend.length).toBe(1); // All same day
+      expect(trend.length).toBe(1);
       expect(trend[0]?.shortCircuit).toBe(1);
       expect(trend[0]?.degradation).toBe(1);
       expect(trend[0]?.openCircuit).toBe(1);
@@ -304,13 +315,25 @@ describe('Analytics Edge Cases — Extended Test Suite', () => {
     });
 
     it('getSystemSummary uptimePercent with 50% faults → ~50%', async () => {
-      const baseTime = new Date('2026-06-01T12:00:00Z').getTime();
+      const baseTime = new Date('2026-06-01T12:00:00Z');
+      const baseUnix = Math.floor(baseTime.getTime() / 1000);
+
       const batch = Array.from({ length: 10 }, (_, i) => ({
-        timestamp: new Date(baseTime + i * 60000).toISOString(),
+        timestamp: new Date(baseTime.getTime() + i * 60000).toISOString(),
         vdc1: 200, vdc2: 200, idc1: 5, idc2: 5, irr: 500, pvt: 30,
-        faultLabel: i < 5 ? 1 : 0, // 5 faults, 5 normal
+        faultLabel: i < 5 ? 1 : 0,
       }));
       await ingestTelemetry(batch);
+
+      const faultAlerts = Array.from({ length: 5 }, (_, i) => ({
+        id: `a${i}`,
+        timestamp: new Date((baseUnix + i * 60) * 1000),
+        severity: 'warning' as const,
+        faultType: 1,
+        confidence: 0.9,
+        detectionLayer: 'ai' as const,
+      }));
+      await db.insert(alerts).values(faultAlerts);
 
       const summary = await getSystemSummary();
       expect(summary.uptimePercent).toBe(50);

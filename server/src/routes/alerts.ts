@@ -41,7 +41,7 @@ export default async function alertRoutes(fastify: FastifyInstance) {
       },
     },
   }, async (request, reply) => {
-    const userId = request.user?.sub || 'system';
+    const userId = request.user!.sub;
     const action = request.body?.action || 'acknowledge';
 
     if (action === 'resolve') {

@@ -4,3 +4,49 @@ paths = [
     '''server/vitest.config.ts''',
     '''server/tools/load-test.ts'''
 ]
+
+# ─── Custom Detection Rules ────────────────────────────────────────
+
+[[rules]]
+id = "cloudflare-api-token"
+description = "Cloudflare API Token"
+regex = '''(?i)\b(cf[_-]?api[_-]?token|cloudflare[_-]?api[_-]?token)\s*[:=]\s*['"]?([A-Za-z0-9_-]{40,})['"]?'''
+tags = ["cloudflare", "api-token"]
+
+[[rules]]
+id = "cloudflare-api-key"
+description = "Cloudflare Global API Key"
+regex = '''(?i)\b(cf[_-]?api[_-]?key|cloudflare[_-]?api[_-]?key)\s*[:=]\s*['"]?([a-f0-9]{37})['"]?'''
+tags = ["cloudflare", "api-key"]
+
+[[rules]]
+id = "cloudflare-tunnel-token"
+description = "Cloudflare Tunnel Token (eyJ-prefixed JWT)"
+regex = '''(?i)(tunnel[_-]?token|TUNNEL_TOKEN)\s*[:=]\s*['"]?(eyJ[A-Za-z0-9_-]{50,})['"]?'''
+tags = ["cloudflare", "tunnel"]
+
+[[rules]]
+id = "cloudflare-turnstile-secret"
+description = "Cloudflare Turnstile Secret Key (production, not test dummy)"
+regex = '''(?i)(turnstile[_-]?secret[_-]?key)\s*[:=]\s*['"]?(0x[A-Za-z0-9_-]{20,})['"]?'''
+tags = ["cloudflare", "turnstile"]
+
+[[rules]]
+id = "hardcoded-password-assignment"
+description = "Hardcoded password in variable assignment"
+regex = '''(?i)(password|passwd|pwd|secret)\s*[:=]\s*['"][^'"]{4,}['"]'''
+tags = ["password", "hardcoded"]
+[rules.allowlist]
+paths = [
+    '''server/vitest.config.ts''',
+    '''server/tools/load-test.ts''',
+    '''server/tools/pentest-scanner.ts''',
+    '''**/*.test.ts''',
+    '''**/*.spec.ts'''
+]
+
+[[rules]]
+id = "hardcoded-password-in-url"
+description = "Hardcoded password embedded in URL"
+regex = '''://[^/\s]+:[^@/\s]+@'''
+tags = ["password", "url"]

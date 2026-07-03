@@ -58,6 +58,8 @@ Here is the structural schematic of the Inception module from the official paper
 
 ![Inception Module Structural Detail](diagrams/inception_module_inside.png)
 
+The InceptionTime architecture uses parallel convolutional branches with different kernel sizes to extract features at multiple scales, mimicking the GoogleNet Inception module design for 1D time series.
+
 ---
 
 
@@ -87,6 +89,8 @@ The model receives a sliding window of **24 timesteps** (equivalent to 12 minute
 * **MinMax Normalization:** All 13 features are scaled to $[0, 1]$ using parameter ranges computed **only on the training set** to prevent data leakage.
 * **Warm-up sliding window:** At startup, the model requires 24 sequential data points before it can perform its first prediction. The system reports `Normal operation (AI warming up)` for the first 23 ticks.
 
+The 1D receptive field slides along the temporal axis of the 24 timesteps, extracting local features across all 13 channel dimensions simultaneously.
+
 Here is the visualization of the 1D receptive field convolution over time:
 
 ![InceptionTime Receptive Field](diagrams/inception_receptive_field.png)
@@ -114,13 +118,57 @@ Here is the visualization of the 1D receptive field convolution over time:
 
 ---
 
-## 5. Architectural Diagram
+## 5. Full Network Architecture
+
+The overall InceptionTime network consists of a stack of 6 Inception blocks, with residual skip connections wrapping around every 3 blocks (i.e. from the input of block 1 to the output of block 3, and from the input of block 4 to the output of block 6).
+
+```mermaid
+graph TD
+    Input[Input Data: B x 13 x 24] --> Block1[Inception Block 1]
+    Block1 --> Block2[Inception Block 2]
+    Block2 --> Block3[Inception Block 3]
+    
+    Input -->|Residual Connection 1| Add1((+))
+    Block3 --> Add1
+    Add1 --> Act1[ReLU Activation]
+    
+    Act1 --> Block4[Inception Block 4]
+    Block4 --> Block5[Inception Block 5]
+    Block5 --> Block6[Inception Block 6]
+    
+    Act1 -->|Residual Connection 2| Add2((+))
+    Block6 --> Add2
+    Add2 --> Act2[ReLU Activation]
+    
+    Act2 --> GAP[Global Average Pooling]
+    GAP --> Dropout[Dropout p=0.2]
+    Dropout --> Dense[Fully Connected Layer]
+    Dense --> Softmax[Softmax Activation]
+    Softmax --> Output[Output Probability Distribution: 5 Classes]
+```
 
 Below is the scientific model architecture diagram detailing the layer connections and data dimensions:
 
 ![InceptionTime Network Architecture Details](diagrams/inception_network_overview.png)
 
-And here is the high-level representation:
+---
 
-![InceptionTime Model Architecture](diagrams/inception_time_diagram.png)
+## 6. Training & Validation Results
+
+The model's actual training performance and evaluation results are visualized below:
+
+### 6.1 Accuracy Curve
+Plots the training and validation accuracy over the 50 training epochs:
+
+![Model Training & Validation Accuracy](diagrams/accuracy_curve.png)
+
+### 6.2 Loss Curve
+Plots the cross-entropy / focal loss optimization path:
+
+![Model Training & Validation Loss](diagrams/loss_curve.png)
+
+### 6.3 Confusion Matrix
+Shows the classification breakdown across the 5 output fault classes on the held-out test set:
+
+![Evaluation Confusion Matrix](diagrams/confusion_matrix.png)
 

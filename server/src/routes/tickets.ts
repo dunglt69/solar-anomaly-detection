@@ -43,10 +43,16 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     try {
+      const user = request.user!;
+      const ticket = await getTicketById(request.params.id);
+      if (!ticket) return reply.status(404).send({ error: 'Ticket not found' });
+      if (user.role !== 'admin' && user.role !== 'security_engineer' && ticket.assigneeId !== user.sub) {
+        return reply.status(403).send({ error: 'Not authorized to update this ticket' });
+      }
       const updated = await updateTicket(request.params.id, request.body);
       await writeActivityLog({
-        actorId: request.user!.sub,
-        actorRole: request.user!.role,
+        actorId: user.sub,
+        actorRole: user.role,
         action: 'UPDATE',
         target: `ticket:${request.params.id}`,
         details: { updates: request.body },
@@ -73,7 +79,7 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       body: {
         type: 'object',
         required: ['content'],
-        properties: { content: { type: 'string', minLength: 1 } },
+        properties: { content: { type: 'string', minLength: 1, maxLength: 5000 } },
       },
     },
   }, async (request, reply) => {
