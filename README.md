@@ -24,7 +24,7 @@
 
 ## 1. Author & Academic Affiliation
 
-*   **Author:** **Lê Trí Dũng** (MSSV: 202414985)
+*   **Author:** **Lê Trí Dũng**
 *   **Affiliation:** School of Electrical and Electronic Engineering, Hanoi University of Science and Technology (HUST)
 *   **Copyright:** © 2026. All rights reserved.
 *   **Citation Requirement:** If you utilize this codebase, the trained model weights, or the system architecture for academic research, graduation theses, papers, or coursework, you must cite this repository:
