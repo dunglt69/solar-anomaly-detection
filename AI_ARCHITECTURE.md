@@ -9,7 +9,7 @@ This document provides a detailed technical overview of the deep learning model,
 EnergiaMind utilizes the **InceptionTime** architecture (Fawaz et al., 2020) for multivariate solar PV time-series classification. InceptionTime was selected to replace standard LSTM layers due to its:
 * **High Efficiency:** 1D convolutions can be parallelized natively on GPU, resulting in 3x–5x faster training than LSTMs.
 * **Multi-Scale Feature Extraction:** Parallel convolution kernels of different sizes (5, 11, 23) allow the model to capture temporal features across different scales.
-* **Accuracy:** Reached **99.80% test accuracy** and a **0.9975 Macro F1 score** on the held-out 20% test set.
+* **Accuracy:** Reached **99.80% test accuracy** and a **0.9883 Macro F1 score** on the held-out 20% test set.
 
 ```
 Input [B, 13, 24] ──► [ 6x Inception Blocks ] ──► GAP ──► Dropout(0.2) ──► Linear(5) ──► Output [B, 5]
@@ -42,7 +42,7 @@ The InceptionTime architecture uses parallel convolutional branches with differe
 
 ## 3. Preprocessing & Feature Engineering Pipeline
 
-The model receives a sliding window of **24 timesteps** (equivalent to 12 minutes of operations at 30-second resolution) containing **13 features**.
+The model receives a sliding window of **24 timesteps** (equivalent to 2 minutes of operations at 5-second resolution) containing **13 features**.
 
 ### 3.1 Feature Columns (13 total)
 * **Raw Measurements (6):**

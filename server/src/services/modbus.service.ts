@@ -68,6 +68,21 @@ export function decodeModbusRegisters(data: number[]): DecodedTelemetry {
   const irr  = data[4]! / REGISTER_MAP.IRR.scale;
   const pvt  = data[5]! / REGISTER_MAP.PVT.scale;
 
+  // Validate decoded values against physical sensor ranges (MED-003)
+  const bounds: Record<string, { value: number; min: number; max: number }> = {
+    vdc1: { value: vdc1, min: 0, max: 1000 },
+    vdc2: { value: vdc2, min: 0, max: 1000 },
+    idc1: { value: idc1, min: -50, max: 50 },
+    idc2: { value: idc2, min: -50, max: 50 },
+    irr:  { value: irr,  min: 0, max: 1500 },
+    pvt:  { value: pvt,  min: -40, max: 100 },
+  };
+  for (const [name, { value, min, max }] of Object.entries(bounds)) {
+    if (!isFinite(value) || value < min || value > max) {
+      throw new Error(`Modbus register out of range: ${name}=${value} (expected [${min}, ${max}])`);
+    }
+  }
+
   const pdc1 = Math.round(vdc1 * idc1 * 100) / 100;
   const pdc2 = Math.round(vdc2 * idc2 * 100) / 100;
   const pdcTotal = Math.round((pdc1 + pdc2) * 100) / 100;

@@ -62,12 +62,24 @@ async function wsPlugin(fastify: FastifyInstance) {
     clients.add(socket);
     fastify.log.info(`WebSocket client connected (total: ${clients.size})`);
 
+    // Periodic token re-validation (every 10 minutes)
+    const revalidateInterval = setInterval(async () => {
+      try {
+        await verifyAccessToken(token);
+      } catch {
+        fastify.log.warn('WebSocket client token expired, closing connection');
+        socket.close(1008, 'Token expired');
+      }
+    }, 10 * 60 * 1000);
+
     socket.on('close', () => {
+      clearInterval(revalidateInterval);
       clients.delete(socket);
       fastify.log.info(`WebSocket client disconnected (total: ${clients.size})`);
     });
 
     socket.on('error', () => {
+      clearInterval(revalidateInterval);
       clients.delete(socket);
     });
 

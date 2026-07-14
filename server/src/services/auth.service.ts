@@ -214,7 +214,13 @@ export async function refresh(
   if (!session || session.revoked || session.expiresAt < new Date()) {
     // Reuse detection — revoke entire family
     if (session) {
+      console.warn(`[Auth] SECURITY: Refresh token reuse detected for user ${session.userId}, family ${session.tokenFamily}. Revoking all tokens in family.`);
       await db.delete(sessions).where(eq(sessions.tokenFamily, session.tokenFamily));
+      await logActivity(session.userId, 'system' as any, 'TOKEN_REUSE_DETECTED', `user:${session.userId}`, {
+        tokenFamily: session.tokenFamily,
+        revoked: session.revoked,
+        expired: session.expiresAt < new Date(),
+      }, ip, userAgent);
     }
     throw new AuthError('Invalid refresh token', 401);
   }

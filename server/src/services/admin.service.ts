@@ -10,24 +10,32 @@ import * as argon2 from 'argon2';
  * Generate the next sequential employee ID (EM-0001, EM-0002, etc.)
  */
 export async function generateEmployeeId(): Promise<string> {
-  const MAX_RETRIES = 3;
+  const MAX_RETRIES = 5;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const [lastUser] = await db.select({ employeeId: users.employeeId })
       .from(users)
       .orderBy(desc(users.employeeId))
       .limit(1);
 
+    let nextNum: number;
     if (!lastUser || !lastUser.employeeId) {
-      return 'EM-0001';
+      nextNum = 1;
+    } else {
+      const match = lastUser.employeeId.match(/^EM-(\d+)$/);
+      nextNum = match ? parseInt(match[1]!, 10) + 1 : 1;
     }
 
-    const match = lastUser.employeeId.match(/^EM-(\d+)$/);
-    if (!match) {
-      return 'EM-0001';
-    }
+    nextNum += attempt;
+    const candidateId = `EM-${String(nextNum).padStart(4, '0')}`;
 
-    const nextNum = parseInt(match[1]!, 10) + 1 + attempt;
-    return `EM-${String(nextNum).padStart(4, '0')}`;
+    const [existing] = await db.select({ id: users.id })
+      .from(users)
+      .where(eq(users.employeeId, candidateId))
+      .limit(1);
+
+    if (!existing) {
+      return candidateId;
+    }
   }
   throw new Error('Failed to generate unique employee ID after retries');
 }
@@ -110,11 +118,11 @@ export async function updateUser(id: string, data: {
 }) {
   const setData: Record<string, any> = { updatedAt: new Date() };
   if (data.displayName !== undefined) setData.displayName = data.displayName;
-  if (data.email) setData.email = data.email;
-  if (data.personalEmail) setData.personalEmail = data.personalEmail;
-  if (data.dob) setData.dob = data.dob;
-  if (data.role) setData.role = data.role;
-  if (data.password) {
+  if (data.email !== undefined) setData.email = data.email;
+  if (data.personalEmail !== undefined) setData.personalEmail = data.personalEmail;
+  if (data.dob !== undefined) setData.dob = data.dob;
+  if (data.role !== undefined) setData.role = data.role;
+  if (data.password !== undefined) {
     setData.passwordHash = await argon2.hash(data.password, {
       type: argon2.argon2id,
       memoryCost: 19456,

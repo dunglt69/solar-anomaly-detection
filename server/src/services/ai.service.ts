@@ -19,9 +19,26 @@ import * as ort from 'onnxruntime-node';
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createHash } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MODELS_DIR = join(__dirname, '..', '..', 'models');
+
+// Expected SHA-256 checksums for model integrity verification
+const EXPECTED_CHECKSUMS: Record<string, string> = {
+  'inception_fault_classifier.onnx': '90bf37a30138ebf53998a53cf27f79ca3aef5de5c766a85e369707ba4882ce18',
+  'scaler_params.json': '513cc410d533916c044304a2d4ac73bb44083896218fa4adb43224e6c345cf71',
+};
+
+// Physical limits for sensor readings
+const READING_BOUNDS = {
+  vdc1: { min: 0, max: 1000 },
+  vdc2: { min: 0, max: 1000 },
+  idc1: { min: -50, max: 50 },
+  idc2: { min: -50, max: 50 },
+  irr:  { min: 0, max: 1500 },
+  pvt:  { min: -40, max: 100 },
+} as const;
 
 // ─── Types ──────────────────────────────────────────────────────────
 interface ScalerParams {
@@ -64,6 +81,21 @@ const NUM_RATIO_FEATURES = 4;
 const NUM_TOTAL_FEATURES = NUM_BASE_FEATURES + NUM_RATIO_FEATURES; // 13
 
 // ─── Feature computation ────────────────────────────────────────────
+/**
+ * Validate that a reading's values are within physical sensor limits.
+ * Returns null if valid, or a description of the violation.
+ */
+export function validateReadingBounds(reading: RawReading): string | null {
+  for (const [key, bounds] of Object.entries(READING_BOUNDS)) {
+    const value = reading[key as keyof RawReading];
+    if (!isFinite(value)) return `${key} is not finite (${value})`;
+    if (value < bounds.min || value > bounds.max) {
+      return `${key}=${value} outside physical range [${bounds.min}, ${bounds.max}]`;
+    }
+  }
+  return null;
+}
+
 function computeBaseFeatures(reading: RawReading): number[] {
   const pdc1 = reading.vdc1 * reading.idc1;
   const pdc2 = reading.vdc2 * reading.idc2;
@@ -126,7 +158,34 @@ class AIInferenceService {
     }
 
     try {
-      this.scaler = JSON.parse(readFileSync(scalerPath, 'utf-8'));
+      // Verify file integrity before loading (CRIT-002)
+      if (!this.verifyChecksum(inceptionPath, 'inception_fault_classifier.onnx')) return false;
+      if (!this.verifyChecksum(scalerPath, 'scaler_params.json')) return false;
+
+      const rawScaler = JSON.parse(readFileSync(scalerPath, 'utf-8'));
+
+      // Schema validation for scaler_params.json (HIGH-004)
+      if (!rawScaler.features || !Array.isArray(rawScaler.features) || rawScaler.features.length === 0) {
+        console.error('[AI] Invalid scaler: missing or empty features array');
+        return false;
+      }
+      if (!rawScaler.params || typeof rawScaler.params !== 'object') {
+        console.error('[AI] Invalid scaler: missing params object');
+        return false;
+      }
+      if (typeof rawScaler.window_size !== 'number' || rawScaler.window_size < 1) {
+        console.error('[AI] Invalid scaler: invalid window_size');
+        return false;
+      }
+      for (const feat of rawScaler.features) {
+        const p = rawScaler.params[feat];
+        if (!p || typeof p.min !== 'number' || typeof p.max !== 'number') {
+          console.error(`[AI] Invalid scaler: missing or invalid params for feature "${feat}"`);
+          return false;
+        }
+      }
+
+      this.scaler = rawScaler;
       console.log(`[AI] Scaler loaded: ${this.scaler!.features.length} features, ` +
         `window=${this.scaler!.window_size}, type=${this.scaler!.scaler_type || 'zscore'}`);
 
@@ -143,11 +202,37 @@ class AIInferenceService {
     }
   }
 
+  private verifyChecksum(filePath: string, fileName: string): boolean {
+    const expected = EXPECTED_CHECKSUMS[fileName];
+    if (!expected) {
+      console.warn(`[AI] No checksum registered for ${fileName} — skipping integrity check`);
+      return true;
+    }
+    const fileBuffer = readFileSync(filePath);
+    const actual = createHash('sha256').update(fileBuffer).digest('hex');
+    if (actual !== expected) {
+      console.error(`[AI] INTEGRITY CHECK FAILED for ${fileName}!`);
+      console.error(`[AI]   Expected: ${expected}`);
+      console.error(`[AI]   Actual:   ${actual}`);
+      console.error(`[AI]   The file may have been tampered with. Refusing to load.`);
+      return false;
+    }
+    console.log(`[AI] Integrity verified for ${fileName}`);
+    return true;
+  }
+
   /**
    * Add a reading to the sliding window and predict if window is full.
    */
   async addReadingAndPredict(reading: RawReading): Promise<AIPrediction | null> {
     if (!this.loaded || !this.session || !this.scaler) return null;
+
+    // Validate input bounds (HIGH-001)
+    const boundsError = validateReadingBounds(reading);
+    if (boundsError) {
+      console.warn(`[AI] Reading rejected — out of physical bounds: ${boundsError}`);
+      return null;
+    }
 
     const windowSize = this.scaler.window_size;
 
@@ -168,9 +253,12 @@ class AIInferenceService {
       return (val - (p as any).mean) / (p as any).std;
     });
 
-    // Sanitize: replace NaN/Inf
+    // Sanitize: replace NaN/Inf with 0, but log a warning (MED-002)
     for (let i = 0; i < fullFeatures.length; i++) {
-      if (!isFinite(fullFeatures[i]!)) fullFeatures[i] = 0;
+      if (!isFinite(fullFeatures[i]!)) {
+        console.warn(`[AI] NaN/Inf detected at feature index ${i} (${this.scaler.features[i]}), replacing with 0`);
+        fullFeatures[i] = 0;
+      }
     }
 
     // Add to window buffer

@@ -107,11 +107,26 @@ export async function queryAlerts(q: AlertQuery) {
       conditions.push(eq(alerts.acknowledged, false));
     } else if (q.status === 'acknowledged') {
       conditions.push(eq(alerts.acknowledged, true));
-      conditions.push(or(eq(tickets.status, 'acknowledged'), eq(tickets.status, 'in_progress')));
+      conditions.push(
+        and(
+          sql`${tickets.id} IS NOT NULL`,
+          or(eq(tickets.status, 'acknowledged'), eq(tickets.status, 'in_progress'))
+        )
+      );
     } else if (q.status === 'escalated') {
-      conditions.push(eq(tickets.status, 'escalated'));
+      conditions.push(
+        and(
+          sql`${tickets.id} IS NOT NULL`,
+          eq(tickets.status, 'escalated')
+        )
+      );
     } else if (q.status === 'resolved') {
-      conditions.push(or(eq(tickets.status, 'resolved'), eq(tickets.status, 'closed')));
+      conditions.push(
+        and(
+          sql`${tickets.id} IS NOT NULL`,
+          or(eq(tickets.status, 'resolved'), eq(tickets.status, 'closed'))
+        )
+      );
     }
   }
 
@@ -188,7 +203,11 @@ export async function acknowledgeAlert(alertId: string, userId: string): Promise
 
 // ─── Resolve alert (New → Acknowledged → Resolved) ─────────────────
 export async function resolveAlert(alertId: string, userId: string): Promise<boolean> {
-  const [alert] = await db.select({ ticketId: alerts.ticketId })
+  const [alert] = await db.select({
+    ticketId: alerts.ticketId,
+    acknowledged: alerts.acknowledged,
+    acknowledgedBy: alerts.acknowledgedBy,
+  })
     .from(alerts)
     .where(eq(alerts.id, alertId));
 
@@ -216,12 +235,16 @@ export async function resolveAlert(alertId: string, userId: string): Promise<boo
     }
   }
 
+  const updateData: Record<string, unknown> = {
+    acknowledged: true,
+    acknowledgedAt: new Date(),
+  };
+  if (!alert.acknowledgedBy) {
+    updateData.acknowledgedBy = userId;
+  }
+
   await db.update(alerts)
-    .set({
-      acknowledged: true,
-      acknowledgedBy: userId,
-      acknowledgedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(alerts.id, alertId));
 
   return true;

@@ -523,12 +523,9 @@ describe('Modbus Service — decodeModbusRegisters', () => {
 
   // ── Boundary & extreme register values ────────────────────────────────
 
-  it('Case 57: maximum unsigned 16-bit register value (65535)', () => {
-    const d = decodeModbusRegisters([65535, 65535, 65535, 65535, 65535, 65535]);
-    expect(d.vdc1).toBe(6553.5);     // 65535 / 10
-    expect(d.idc1).toBe(655.35);     // 65535 / 100
-    expect(d.irr).toBe(6553.5);      // 65535 / 10
-    expect(d.pvt).toBe(6553.5);      // 65535 / 10
+  it('Case 57: maximum unsigned 16-bit register value (65535) — rejected by range validation', () => {
+    expect(() => decodeModbusRegisters([65535, 65535, 65535, 65535, 65535, 65535]))
+      .toThrow('Modbus register out of range');
   });
 
   it('Case 58: register value of 1 produces small decoded values', () => {

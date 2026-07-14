@@ -10,7 +10,7 @@ const ADMIN_PASSWORD = process.env['ADMIN_PASSWORD'];
 if (!ADMIN_PASSWORD) {
   console.warn('⚠️  ADMIN_PASSWORD not set in environment. Generating random password...');
 }
-const finalPassword = ADMIN_PASSWORD || crypto.randomUUID().slice(0, 16) + '!A1';
+const finalPassword = ADMIN_PASSWORD || crypto.randomBytes(24).toString('base64url');
 const ADMIN_EMAIL = process.env['ADMIN_EMAIL'] || 'admin@energiamind.local';
 
 export async function seed() {

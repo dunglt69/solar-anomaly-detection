@@ -35,12 +35,12 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
           required: ['timestamp', 'vdc1', 'vdc2', 'idc1', 'idc2', 'irr', 'pvt'],
           properties: {
             timestamp: { oneOf: [{ type: 'string' }, { type: 'number' }] },
-            vdc1: { type: 'number' },
-            vdc2: { type: 'number' },
-            idc1: { type: 'number' },
-            idc2: { type: 'number' },
-            irr: { type: 'number' },
-            pvt: { type: 'number' },
+            vdc1: { type: 'number', minimum: 0, maximum: 1000 },
+            vdc2: { type: 'number', minimum: 0, maximum: 1000 },
+            idc1: { type: 'number', minimum: -50, maximum: 50 },
+            idc2: { type: 'number', minimum: -50, maximum: 50 },
+            irr: { type: 'number', minimum: 0, maximum: 1500 },
+            pvt: { type: 'number', minimum: -40, maximum: 100 },
             pdc1: { type: 'number' },
             pdc2: { type: 'number' },
             pdcTotal: { type: 'number' },
@@ -78,7 +78,7 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
           detectedFaultLabel = detection.faultLabel;
           // Persist AI-detected fault label back to telemetry row
           const ts = new Date(point.timestamp);
-          updateFaultLabel(ts, detection.faultLabel).catch(err => fastify.log.error(err, 'Failed to update fault label'));
+          await updateFaultLabel(ts, detection.faultLabel);
 
           const alertResult = await processDetectionResult(
             detection,
