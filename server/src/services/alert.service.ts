@@ -1,5 +1,5 @@
 import { db } from '../db/index.js';
-import { alerts, tickets } from '../db/schema.js';
+import { alerts, tickets, config } from '../db/schema.js';
 import { eq, desc, sql, count, and, gte, lte, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import type { DetectionResult } from './detection.service.js';
@@ -17,6 +17,52 @@ const FAULT_SEVERITY: Record<number, 'info' | 'warning' | 'critical' | 'emergenc
   4: 'warning',     // Shadowing — partial obstruction
 };
 
+const DEFAULT_COOLDOWN_MINUTES = 5;
+
+// ─── Config helpers (cached lightly via per-call reads; cheap for SQLite) ──
+async function getConfigNumber(key: string, field: string, fallback: number): Promise<number> {
+  try {
+    const [row] = await db.select({ value: config.value }).from(config).where(eq(config.key, key)).limit(1);
+    if (row?.value != null) {
+      if (typeof row.value === 'number' && isFinite(row.value)) return row.value;
+      if (typeof row.value === 'object' && row.value !== null && field in (row.value as object)) {
+        const v = Number((row.value as Record<string, unknown>)[field]);
+        if (isFinite(v)) return v;
+      }
+    }
+  } catch { /* use fallback */ }
+  return fallback;
+}
+
+async function getConfigBoolean(key: string, fallback = false): Promise<boolean> {
+  try {
+    const [row] = await db.select({ value: config.value }).from(config).where(eq(config.key, key)).limit(1);
+    if (row?.value === true || row?.value === false) return row.value;
+    if (typeof row?.value === 'string') return row.value === 'true';
+    if (row?.value && typeof row.value === 'object' && 'enabled' in (row.value as object)) {
+      return Boolean((row.value as Record<string, unknown>).enabled);
+    }
+  } catch { /* use fallback */ }
+  return fallback;
+}
+
+async function getConfigString(key: string, fallback = ''): Promise<string> {
+  try {
+    const [row] = await db.select({ value: config.value }).from(config).where(eq(config.key, key)).limit(1);
+    if (row?.value !== undefined && row?.value !== null) {
+      if (typeof row.value === 'string') return row.value;
+      if (typeof row.value === 'object') {
+        if ('email' in (row.value as object)) {
+          return String((row.value as Record<string, unknown>).email);
+        }
+        return JSON.stringify(row.value);
+      }
+      return String(row.value);
+    }
+  } catch { /* use fallback */ }
+  return fallback;
+}
+
 // ─── Generate incident ID ───────────────────────────────────────────
 function generateIncidentId(): string {
   const year = new Date().getFullYear();
@@ -32,11 +78,30 @@ export async function processDetectionResult(
 ) {
   if (!detection.faultDetected) return null;
 
+  // Maintenance mode: still ingest telemetry, but suppress new alerts/tickets
+  if (await getConfigBoolean('maintenance_mode', false)) {
+    return null;
+  }
+
+  // Cooldown: suppress duplicate alerts of the same fault type within N minutes
+  const cooldownMin = await getConfigNumber('alert_cooldown_minutes', 'minutes', DEFAULT_COOLDOWN_MINUTES);
+  if (cooldownMin > 0) {
+    const since = new Date(timestamp.getTime() - cooldownMin * 60_000);
+    const [recent] = await db.select({ id: alerts.id })
+      .from(alerts)
+      .where(and(
+        eq(alerts.faultType, detection.faultLabel),
+        gte(alerts.timestamp, since),
+      ))
+      .limit(1);
+    if (recent) return null;
+  }
+
   const severity = FAULT_SEVERITY[detection.faultLabel] || 'warning';
   const alertId = nanoid();
   const faultName = detection.faultName;
-
-  const detectionLayer = 'ai';
+  const detectionLayer = detection.detectionLayer === 'rule' ? 'rule' as const : 'ai' as const;
+  const autoAckInfo = severity === 'info' && await getConfigBoolean('auto_acknowledge_info', false);
 
   const result = await db.transaction(async (tx) => {
     await tx.insert(alerts).values({
@@ -47,20 +112,22 @@ export async function processDetectionResult(
       confidence: detection.confidence,
       detectionLayer,
       telemetryId: null,
-      acknowledged: false,
+      acknowledged: autoAckInfo,
+      acknowledgedAt: autoAckInfo ? timestamp : null,
     });
 
     const ticketId = generateIncidentId();
-    const detectionInfo = `AI InceptionTime (${(detection.confidence * 100).toFixed(1)}% confidence)`;
+    const layerLabel = detectionLayer === 'rule' ? 'Rule-based fallback' : 'AI InceptionTime';
+    const detectionInfo = `${layerLabel} (${(detection.confidence * 100).toFixed(1)}% confidence)`;
 
     await tx.insert(tickets).values({
       id: ticketId,
-      status: 'open',
+      status: autoAckInfo ? 'acknowledged' : 'open',
       severity,
       faultType: detection.faultLabel,
       affectedComponent: 'DC Strings 1 & 2',
       title: `${faultName} Detected — ${readings.pdcTotal.toFixed(0)}W @ ${readings.irr.toFixed(0)} W/m²`,
-      description: `AI-powered fault detection triggered.\n\n` +
+      description: `Fault detection triggered.\n\n` +
         `**Fault Type:** ${faultName} (Label ${detection.faultLabel})\n` +
         `**Severity:** ${severity.toUpperCase()}\n` +
         `**Confidence:** ${(detection.confidence * 100).toFixed(1)}%\n` +
@@ -80,7 +147,12 @@ export async function processDetectionResult(
     return { ticketId, detectionInfo };
   });
 
-  return { alertId, ticketId: result.ticketId, severity, faultName, detectionLayer: detection.detectionLayer, confidence: detection.confidence };
+  const email = await getConfigString('notification_email', '');
+  if (email) {
+    console.log(`[Email Alert Simulation] Sending email to ${email} - Alert ID: ${alertId}, Severity: ${severity.toUpperCase()}, Fault: ${faultName}`);
+  }
+
+  return { alertId, ticketId: result.ticketId, severity, faultName, detectionLayer, confidence: detection.confidence };
 }
 
 // ─── Query alerts ───────────────────────────────────────────────────

@@ -24,6 +24,9 @@ import ModbusRTU from 'modbus-serial';
 import { ingestTelemetry, updateFaultLabel } from './telemetry.service.js';
 import { detectionService } from './detection.service.js';
 import { processDetectionResult } from './alert.service.js';
+import { db } from '../db/index.js';
+import { config as configTable } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 // ─── Register map with scale factors ────────────────────────────────
 const REGISTER_MAP = {
@@ -132,14 +135,32 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
   let pollTimerId: ReturnType<typeof setTimeout> | null = null;
   let pollStopped = false;
 
+  async function getPollInterval(): Promise<number> {
+    try {
+      const [row] = await db.select({ value: configTable.value })
+        .from(configTable)
+        .where(eq(configTable.key, 'modbus_poll_interval'))
+        .limit(1);
+      if (row?.value !== undefined && row?.value !== null) {
+        const val = typeof row.value === 'object' ? NaN : Number(row.value);
+        if (isFinite(val) && val > 0) {
+          return val;
+        }
+      }
+    } catch (_) {}
+    return config.interval;
+  }
+
   async function poll() {
     if (pollStopped) return;
+
+    const currentInterval = await getPollInterval();
 
     const isConnected = await ensureConnected();
     if (!isConnected) {
       errorCount++;
       console.error(`[Modbus] ❌ Poll error (${errorCount}): Port Not Open (reconnect pending)`);
-      pollTimerId = setTimeout(poll, config.interval);
+      pollTimerId = setTimeout(poll, currentInterval);
       return;
     }
 
@@ -225,7 +246,7 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
     }
 
     if (!pollStopped) {
-      pollTimerId = setTimeout(poll, config.interval);
+      pollTimerId = setTimeout(poll, currentInterval);
     }
   }
 
@@ -238,6 +259,10 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
   };
 
   if (!initialConnected) {
+    if (pollTimerId !== null) clearTimeout(pollTimerId);
+    pollStopped = true;
+    stopModbusPoller = null;
+    try { client.close(() => {}); } catch (_) {}
     throw new Error(`[Modbus] Failed to connect on initial attempt`);
   }
 }

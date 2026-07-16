@@ -1,2 +1,8 @@
+# Security Policy
+
 ## Reporting a Vulnerability
-Report any vulnerability to email: ltridung1@gmail.
+
+If you discover a security vulnerability in EnergiaMind, please report it responsibly using the following channels:
+
+- **Email:** [ltridung1@gmail.com](mailto:ltridung1@gmail.com)
+

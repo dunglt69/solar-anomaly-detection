@@ -44,13 +44,30 @@ class DetectionService {
       return this.confidenceThreshold;
     }
     try {
-      const [row] = await db.select({ value: config.value })
+      const [dsRow] = await db.select({ value: config.value })
         .from(config)
-        .where(eq(config.key, 'ai_confidence_threshold'))
+        .where(eq(config.key, 'detection_sensitivity'))
         .limit(1);
-      if (row?.value && typeof row.value === 'object' && 'min' in row.value) {
-        const v = Number((row.value as Record<string, unknown>).min);
-        if (isFinite(v) && v > 0 && v < 1) this.confidenceThreshold = v;
+      
+      let sensitivityVal: number | null = null;
+      if (dsRow?.value !== undefined && dsRow?.value !== null) {
+        const val = typeof dsRow.value === 'object' ? NaN : Number(dsRow.value);
+        if (isFinite(val) && val >= 0.1 && val <= 1.0) {
+          sensitivityVal = val;
+        }
+      }
+
+      if (sensitivityVal !== null) {
+        this.confidenceThreshold = sensitivityVal;
+      } else {
+        const [row] = await db.select({ value: config.value })
+          .from(config)
+          .where(eq(config.key, 'ai_confidence_threshold'))
+          .limit(1);
+        if (row?.value && typeof row.value === 'object' && 'min' in row.value) {
+          const v = Number((row.value as Record<string, unknown>).min);
+          if (isFinite(v) && v > 0 && v < 1) this.confidenceThreshold = v;
+        }
       }
     } catch {
       // DB unavailable — use cached value
@@ -103,16 +120,25 @@ class DetectionService {
 
     if (aiResult) {
       const faultDetected = aiResult.faultLabel !== 0 && aiResult.confidence > threshold;
+      let details: string;
+      if (aiResult.faultLabel === 0) {
+        details = `AI Classifier: Normal (${(aiResult.confidence * 100).toFixed(1)}%)`;
+      } else if (faultDetected) {
+        details = `AI Classifier: ${aiResult.faultName} (${(aiResult.confidence * 100).toFixed(1)}%)`;
+      } else {
+        // Predicted fault class but below confidence gate — do not mislabel as Normal
+        details =
+          `AI Classifier: ${aiResult.faultName} below threshold ` +
+          `(${(aiResult.confidence * 100).toFixed(1)}% ≤ ${(threshold * 100).toFixed(0)}%)`;
+      }
       return {
         faultDetected,
-        faultLabel: aiResult.faultLabel,
-        faultName: aiResult.faultName,
+        faultLabel: faultDetected ? aiResult.faultLabel : 0,
+        faultName: faultDetected ? aiResult.faultName : 'Normal',
         confidence: aiResult.confidence,
         detectionLayer: 'ai',
         probabilities: aiResult.probabilities,
-        details: faultDetected
-          ? `AI Classifier: ${aiResult.faultName} (${(aiResult.confidence * 100).toFixed(1)}%)`
-          : `AI Classifier: Normal (${(aiResult.confidence * 100).toFixed(1)}%)`,
+        details,
       };
     }
 
