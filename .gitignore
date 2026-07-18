@@ -4,8 +4,6 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
 # Node modules & build outputs
 node_modules/
@@ -14,7 +12,7 @@ dist-ssr/
 .venv/
 .agents/
 
-# SQLite databases & temp files
+# SQLite databases
 *.db
 *.db-journal
 *.db-wal
@@ -29,27 +27,11 @@ server/data/*.db
 server/.env
 client/.env
 
-# ONNX model files (large binary)
+# AI/ML Models (ONNX)
 *.onnx
 !server/models/*.onnx
 
-# Security tools & scan artifacts
-Security test/
-security-tools/
-security test report/
-*Report*/
-ZAP/
-zap/
-
-# Tools cache
-tools/npm-cache/
-tools/npm/
-
-# Scratch files & temporary scripts
-server/scratch/
-scratch/
-
-# AI/ML training artifacts
+# AI/ML checkpoints & training artifacts
 *.pt
 *.pth
 *.pkl
@@ -62,47 +44,24 @@ __pycache__/
 .idea/
 .DS_Store
 Thumbs.db
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Coverage reports
-coverage/
-.nyc_output/
-
-# Binary files (DLLs, executables)
-*.dll
-*.exe
-*.bin
-*.pak
+*.tmp
+~$*
 
 # Agent cache files
 .gemini/
 
-# Non-code deliverables (reports, presentations, papers)
-security-audit/
-Slide/
+# Scratch & cache folders
+scratch/
+server/scratch/
+tools/npm/
+tools/npm-cache/
+
+# Papers
 paper/
-Báo cáo KTPMUD.docx
-BAO_CAO_KTPMUD.md
-latex-report/
-latex-slide/
-latex-compiler/
 
-# Microsoft Office temp & documents
-*.docx
-*.doc
-~$*
-*.tmp
-
-# Raw & processed training datasets
-tools/data/
-
-# Google site verification files
-google*.html
+# Raw & processed training datasets (Ignore npz, keep simulation.csv for simulator)
+tools/data/*
+!tools/data/simulation.csv
 
 # Project PDF report
 Nhóm 8- Hệ thống phát hiện lỗi trên pin mặt trời.pdf
-
