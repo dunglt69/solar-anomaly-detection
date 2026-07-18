@@ -190,16 +190,18 @@ async function main() {
   // ─── CSV stepper — advance registers every INTERVAL_MS ──────────
   let stats = { total: 0, faults: 0, exceptionErrors: 0 };
 
-  setInterval(() => {
-    // ~2% Modbus Exception response simulation
-    if (Math.random() < 0.02) {
-      simulateModbusException = true;
-      stats.exceptionErrors++;
-      console.log('  ⚠️  [Modbus] Exception response (0x04) — next poll will receive error response');
+  function step(isStartup = false) {
+    if (!isStartup) {
+      // ~2% Modbus Exception response simulation
+      if (Math.random() < 0.02) {
+        simulateModbusException = true;
+        stats.exceptionErrors++;
+        console.log('  ⚠️  [Modbus] Exception response (0x04) — next poll will receive error response');
 
-      // Clear exception error after a short delay (before next poll)
-      setTimeout(() => { simulateModbusException = false; }, Math.min(INTERVAL_MS / 2, 2000));
-      return;
+        // Clear exception error after a short delay (before next poll)
+        setTimeout(() => { simulateModbusException = false; }, Math.min(INTERVAL_MS / 2, 2000));
+        return;
+      }
     }
     simulateModbusException = false;
 
@@ -234,7 +236,12 @@ async function main() {
       `Regs=[${registers.join(',')}] | ` +
       `GT: ${groundTruth}`
     );
-  }, INTERVAL_MS);
+  }
+
+  // Initialize immediately
+  step(true);
+
+  setInterval(() => step(false), INTERVAL_MS);
 
   // ─── Graceful shutdown ──────────────────────────────────────────
   process.on('SIGINT', () => {
