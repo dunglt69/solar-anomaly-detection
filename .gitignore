@@ -31,6 +31,7 @@ client/.env
 
 # ONNX model files (large binary)
 *.onnx
+!server/models/*.onnx
 
 # Security tools & scan artifacts
 Security test/
