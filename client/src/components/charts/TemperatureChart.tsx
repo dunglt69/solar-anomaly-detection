@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import Chart from './Chart';
-import type { AggregatedPoint, ChartInterval } from '../../stores/telemetryStore';
+import { useTelemetryStore, type AggregatedPoint, type ChartInterval } from '../../stores/telemetryStore';
 import type { EChartsOption } from 'echarts';
 import { getChartTimeRanges, getChartTheme } from '../../lib/chartConstants';
 
@@ -14,6 +14,8 @@ interface Props {
 export default function TemperatureChart({ data, height = 280, interval = '1h', currentTime }: Props) {
   const [fallbackTime] = useState(() => Date.now());
   const currentVal = currentTime ?? fallbackTime;
+  const customFrom = useTelemetryStore((state) => state.customFrom);
+  const customTo = useTelemetryStore((state) => state.customTo);
 
   const [smooth, setSmooth] = useState(
     () => localStorage.getItem('em_chart_smooth') !== 'false'
@@ -38,7 +40,7 @@ export default function TemperatureChart({ data, height = 280, interval = '1h', 
     if (data.length === 0) return themeConfig;
 
     // Calculate visible and fetch range from shared constants
-    const { startValue, endValue, minTime, maxTime } = getChartTimeRanges(interval, currentVal);
+    const { startValue, endValue, minTime, maxTime } = getChartTimeRanges(interval, currentVal, customFrom, customTo);
     const isDark = theme === 'dark';
 
     return {
@@ -178,7 +180,7 @@ export default function TemperatureChart({ data, height = 280, interval = '1h', 
         },
       ],
     };
-  }, [data, interval, currentVal, smooth, theme]);
+  }, [data, interval, currentVal, smooth, theme, customFrom, customTo]);
 
   return <Chart option={option} height={height} className="chart-container" resetKey={interval} theme={theme} />;
 }

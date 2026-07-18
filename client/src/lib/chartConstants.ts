@@ -19,7 +19,23 @@ export const FETCH_RANGE_MS: Record<ChartInterval, number> = {
 };
 
 /** Compute visible and fetch time boundaries for chart dataZoom */
-export function getChartTimeRanges(interval: ChartInterval, currentTime: number) {
+export function getChartTimeRanges(
+  interval: ChartInterval,
+  currentTime: number,
+  customFrom: string | null = null,
+  customTo: string | null = null
+) {
+  if (customFrom) {
+    const minTime = new Date(customFrom).getTime();
+    const maxTime = customTo ? new Date(customTo).getTime() : Date.now();
+    return {
+      startValue: minTime,
+      endValue: maxTime,
+      minTime,
+      maxTime,
+    };
+  }
+
   const visibleRangeMs = RANGE_MS[interval] ?? RANGE_MS['1h'];
   const fetchRangeMs = FETCH_RANGE_MS[interval] ?? FETCH_RANGE_MS['1h'];
   return {
