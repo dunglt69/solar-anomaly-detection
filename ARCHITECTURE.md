@@ -12,7 +12,7 @@ EnergiaMind is a decoupled, injection-agnostic solar monitoring platform. The ar
 
 > **Modbus TCP Master & Slave Integration:** The system includes a real Modbus TCP client/server communication channel. The simulator (`tools/simulator-modbus.ts`) acts as a Modbus TCP Slave (running on port 5020), mapping simulation sensor data (from `simulation.csv`) directly to Modbus holding registers (address 0 to 5). The backend server (`server/src/services/modbus.service.ts`) runs a Modbus TCP Master that connects to the simulator, polling the registers at a configurable interval (default: 5000ms), and feeding the data into the ingestion and AI pipelines. It features robust auto-reconnection logic to handle connection drops or simulator restarts.
 
-> **AI Model:** The production fault classifier is **InceptionTime** (depth=6, filters=32, kernels=5/11/23), served via ONNX Runtime. Earlier LSTM attempts failed (11.66% accuracy). The service file is `ai.service.ts` (renamed from `lstm.service.ts` during the D11 audit).
+> **AI Model:** The production fault classifier is **InceptionTime** (depth=6, filters=32, kernels=5/11/23), served via ONNX Runtime. The service file is `ai.service.ts`.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
