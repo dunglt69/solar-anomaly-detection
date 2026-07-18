@@ -57,7 +57,6 @@ tools/npm/
 tools/npm-cache/
 
 # Papers
-paper/
 
 # Raw & processed training datasets (Ignore npz, keep simulation.csv for simulator)
 tools/data/*
