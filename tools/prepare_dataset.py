@@ -4,7 +4,7 @@ EnergiaMind — Dataset Preparation v3 (FIXED)
 KEY FIXES from v2:
 1. DO NOT shuffle rows before creating sliding windows — the dataset is
    time-ordered with contiguous fault blocks (2307 blocks). Shuffling
-   destroys temporal patterns that the LSTM needs.
+   destroys temporal patterns that the InceptionTime model needs.
 2. DO NOT double-normalize — CSV values are already scaled (vdc1~0.7,
    irr~1.4). Z-score on already-normalized data creates near-zero
    variance features. Use MinMax or just pass raw values.
