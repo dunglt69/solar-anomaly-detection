@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-07-22 01:09:57",
+  "model_architecture": "InceptionTime",
+  "parameters": {
+    "total_params": 366789,
+    "trainable_params": 366789,
+    "model_memory_kb": 1432.77,
+    "checkpoint_size_mb": 1.44,
+    "onnx_size_mb": 0.13,
+    "macs_per_sample": 8720512,
+    "flops_per_sample": 17441024,
+    "mflops_per_sample": 17.441
+  },
+  "classification_metrics": {
+    "accuracy": 0.998,
+    "macro_precision": 0.9826,
+    "macro_recall": 0.9941,
+    "macro_f1": 0.9883,
+    "micro_precision": 0.998,
+    "micro_recall": 0.998,
+    "micro_f1": 0.998,
+    "weighted_f1": 0.998,
+    "per_class": {
+      "Normal": {
+        "samples": 139381,
+        "correct": 139271,
+        "accuracy": 0.9992107963065268,
+        "precision": 0.9997918162239771,
+        "recall": 0.9992107963065268,
+        "f1_score": 0.999501221827107
+      },
+      "Short-Circuit": {
+        "samples": 2361,
+        "correct": 2361,
+        "accuracy": 1.0,
+        "precision": 0.9617107942973523,
+        "recall": 1.0,
+        "f1_score": 0.9804817275747508
+      },
+      "Degradation": {
+        "samples": 2270,
+        "correct": 2247,
+        "accuracy": 0.9898678414096916,
+        "precision": 0.9668674698795181,
+        "recall": 0.9898678414096916,
+        "f1_score": 0.978232477144101
+      },
+      "Open Circuit": {
+        "samples": 2410,
+        "correct": 2394,
+        "accuracy": 0.9933609958506224,
+        "precision": 0.9921259842519685,
+        "recall": 0.9933609958506224,
+        "f1_score": 0.9927431059506531
+      },
+      "Shadowing": {
+        "samples": 14908,
+        "correct": 14730,
+        "accuracy": 0.9880601019586799,
+        "precision": 0.9927213910230489,
+        "recall": 0.9880601019586799,
+        "f1_score": 0.9903852618839508
+      }
+    }
+  },
+  "engine_matrix": {
+    "pytorch_cpu": {
+      "b1": {
+        "p50_batch_ms": 1.2867999976151623,
+        "p95_batch_ms": 2.2254350067669293,
+        "p99_batch_ms": 2.446642002396402,
+        "mean_sample_ms": 1.4439748999793665,
+        "p50_sample_ms": 1.2867999976151623,
+        "throughput_samp_sec": 692.532813426528
+      },
+      "b1024": {
+        "p50_batch_ms": 106.34220000065397,
+        "p95_batch_ms": 112.70845000108238,
+        "p99_batch_ms": 119.60116900045249,
+        "mean_sample_ms": 0.10493747851541002,
+        "p50_sample_ms": 0.10384980468813865,
+        "throughput_samp_sec": 9529.48378546327
+      }
+    },
+    "pytorch_gpu": {
+      "b1": {
+        "p50_batch_ms": 2.6954999993904494,
+        "p95_batch_ms": 3.155739996873308,
+        "p99_batch_ms": 3.7485520043264837,
+        "mean_sample_ms": 2.7345567000156734,
+        "p50_sample_ms": 2.6954999993904494,
+        "throughput_samp_sec": 365.6899855081697
+      },
+      "b1024": {
+        "p50_batch_ms": 72.19460000487743,
+        "p95_batch_ms": 72.77847000150359,
+        "p99_batch_ms": 72.95131200036849,
+        "mean_sample_ms": 0.0705804892581341,
+        "p50_sample_ms": 0.07050253906726311,
+        "throughput_samp_sec": 14168.221423667084
+      }
+    },
+    "onnx_cpu": {
+      "b1": {
+        "p50_batch_ms": 0.4005999981018249,
+        "p95_batch_ms": 0.5606099981378065,
+        "p99_batch_ms": 0.632599998716614,
+        "mean_sample_ms": 0.42857129988988163,
+        "p50_sample_ms": 0.4005999981018249,
+        "throughput_samp_sec": 2333.334033933077
+      },
+      "b1024": {
+        "p50_batch_ms": 237.4860499985516,
+        "p95_batch_ms": 252.5466399940342,
+        "p99_batch_ms": 255.68055200354138,
+        "mean_sample_ms": 0.2329529296874,
+        "p50_sample_ms": 0.23191997070171055,
+        "throughput_samp_sec": 4292.712700981705
+      }
+    },
+    "onnx_gpu": {
+      "b1": {
+        "p50_batch_ms": 0.7966000011947472,
+        "p95_batch_ms": 1.9404549970204241,
+        "p99_batch_ms": 2.161807001248235,
+        "mean_sample_ms": 0.9443769999488723,
+        "p50_sample_ms": 0.7966000011947472,
+        "throughput_samp_sec": 1058.8991473258445
+      },
+      "b1024": {
+        "p50_batch_ms": 5.750349999289028,
+        "p95_batch_ms": 5.869175000407267,
+        "p99_batch_ms": 6.417675999400675,
+        "mean_sample_ms": 0.005648149414199111,
+        "p50_sample_ms": 0.005615576171180692,
+        "throughput_samp_sec": 177049.14064172233
+      }
+    }
+  }
+}

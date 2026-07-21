@@ -304,18 +304,27 @@ The `tools/` directory contains the Python-based data engineering and machine le
 
 ### 6.3 AI Model Performance Metrics
 
-The pre-trained InceptionTime model achieves a test accuracy of **99.80%** on the held-out test set (Days 15–16). Below is the comprehensive classification report containing **Micro (Accuracy), Macro, and Weighted** averages across all classes, along with per-class metrics:
+The pre-trained InceptionTime model achieves a test accuracy of **99.80%** and a Macro F1-Score of **0.9883** on the held-out test set (161,330 samples). Below is the comprehensive classification report containing **Micro (Accuracy), Macro, and Weighted** averages across all classes, along with per-class metrics:
 
-| Metric | Precision | Recall | F1-Score | Support |
+| Class ID | Fault Name | Precision | Recall | F1-Score | Support (Samples) | Accuracy |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: |
+| **0** | Normal | 0.9998 | 0.9992 | **0.9995** | 139,381 | 99.92% |
+| **1** | Short-Circuit | 0.9617 | 1.0000 | **0.9805** | 2,361 | 100.00% |
+| **2** | Degradation | 0.9669 | 0.9899 | **0.9782** | 2,270 | 98.99% |
+| **3** | Open Circuit | 0.9921 | 0.9934 | **0.9927** | 2,410 | 99.34% |
+| **4** | Shadowing | 0.9927 | 0.9881 | **0.9904** | 14,908 | 98.81% |
+| **Micro Avg** | **Overall Accuracy** | **0.9980** | **0.9980** | **0.9980** | **161,330** | **99.80%** |
+| **Macro Avg** | **Unweighted Class Avg** | **0.9826** | **0.9941** | **0.9883** | **161,330** | — |
+| **Weighted Avg** | **Support Weighted Avg** | **0.9980** | **0.9980** | **0.9980** | **161,330** | — |
+
+#### 4-Engine Latency & Throughput Benchmark Matrix
+
+| Execution Engine Environment | Single Sample ($Batch = 1$) Latency (p50) | Single Sample ($Batch = 1$) Throughput | Batched ($Batch = 1024$) Per-Sample Latency | Batched ($Batch = 1024$) Total Throughput |
 | :--- | :---: | :---: | :---: | :---: |
-| **Normal** | 1.0000 | 1.0000 | 1.0000 | 139,381 |
-| **Short-Circuit** | 0.9512 | 1.0000 | 0.9750 | 2,361 |
-| **Degradation** | 0.9631 | 0.9899 | 0.9763 | 2,270 |
-| **Open Circuit** | 0.9946 | 0.9938 | 0.9942 | 2,410 |
-| **Shadowing** | 0.9940 | 0.9854 | 0.9897 | 14,908 |
-| **Micro Average (Accuracy)** | **0.9980** | **0.9980** | **0.9980** | **161,330** |
-| **Macro Average** | **0.9806** | **0.9938** | **0.9870** | **161,330** |
-| **Weighted Average** | **0.9978** | **0.9978** | **0.9978** | **161,330** |
+| **1. PyTorch CPU** | `1.3197 ms` | `664 samp/sec` | `106.18 µs` (`0.1062 ms`) | `9,283 samp/sec` |
+| **2. PyTorch GPU (CUDA)** | `2.6925 ms` | `360 samp/sec` | `70.49 µs` (`0.0705 ms`) | `14,160 samp/sec` |
+| **3. ONNX Runtime CPU** | **`0.4030 ms`** | **`2,279 samp/sec`** | `233.68 µs` (`0.2337 ms`) | `4,278 samp/sec` |
+| **4. ONNX Runtime GPU (CUDA)** | `0.7557 ms` | `1,112 samp/sec` | **`5.61 µs`** (`0.0056 ms`) | **`177,783 samp/sec`** |
 
 ---
 

@@ -2,7 +2,7 @@
   "model": "InceptionTime",
   "version": 3,
   "status": "ACTIVE",
-  "note": "InceptionTime fault classifier — 99.80% test accuracy, 0.9975 macro F1.",
+  "note": "InceptionTime fault classifier — 99.80% test accuracy, 0.9883 macro F1.",
   "num_features": 13,
   "window_size": 24,
   "num_classes": 5,
@@ -15,7 +15,7 @@
     "4": "Shadowing"
   },
   "test_accuracy": 0.998,
-  "macro_f1": 0.9975,
+  "macro_f1": 0.9883,
   "device": "cuda",
   "training_config": {
     "batch_size": 1024,
