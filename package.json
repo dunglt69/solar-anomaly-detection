@@ -22,16 +22,7 @@
     "@playwright/test": "^1.61.1"
   },
   "overrides": {
-    "onnxruntime-node": {
-      "adm-zip": "^0.6.0"
-    },
-    "drizzle-kit": {
-      "esbuild": "^0.25.0"
-    },
-    "@esbuild-kit/core-utils": {
-      "esbuild": "^0.25.0"
-    },
-    "adm-zip": "^0.6.0",
-    "esbuild": "^0.25.0"
+    "adm-zip": ">=0.6.0",
+    "esbuild": ">=0.25.0"
   }
 }
