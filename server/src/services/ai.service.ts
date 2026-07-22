@@ -136,7 +136,7 @@ function addRatioFeatures(baseFeatures: number[]): number[] {
 class AIInferenceService {
   private session: ort.InferenceSession | null = null;
   private scaler: ScalerParams | null = null;
-  private windowBuffer: number[][] = [];
+  private windowBuffers: Map<string, number[][]> = new Map();
   private loaded = false;
 
   get isLoaded(): boolean {
@@ -223,8 +223,9 @@ class AIInferenceService {
 
   /**
    * Add a reading to the sliding window and predict if window is full.
+   * Supports an optional streamId (e.g. device/string ID) to isolate time-series buffers.
    */
-  async addReadingAndPredict(reading: RawReading): Promise<AIPrediction | null> {
+  async addReadingAndPredict(reading: RawReading, streamId: string = 'default'): Promise<AIPrediction | null> {
     if (!this.loaded || !this.session || !this.scaler) return null;
 
     // Validate input bounds (HIGH-001)
@@ -261,18 +262,24 @@ class AIInferenceService {
       }
     }
 
-    // Add to window buffer
-    this.windowBuffer.push(fullFeatures);
-    if (this.windowBuffer.length > windowSize) {
-      this.windowBuffer.shift();
+    // Add to stream-specific window buffer
+    let buffer = this.windowBuffers.get(streamId);
+    if (!buffer) {
+      buffer = [];
+      this.windowBuffers.set(streamId, buffer);
+    }
+
+    buffer.push(fullFeatures);
+    if (buffer.length > windowSize) {
+      buffer.shift();
     }
 
     // Need full window for prediction
-    if (this.windowBuffer.length < windowSize) {
+    if (buffer.length < windowSize) {
       return null;
     }
 
-    return this.predict(this.windowBuffer, windowSize);
+    return this.predict(buffer, windowSize);
   }
 
   private async predict(window: number[][], windowSize: number): Promise<AIPrediction> {
@@ -288,32 +295,45 @@ class AIInferenceService {
     }
 
     const inputTensor = new ort.Tensor('float32', flat, [1, numFeatures, windowSize]);
-    const results = await this.session!.run({ input: inputTensor });
-    const output = results['output']!;
-    const logits = Array.from(output.data as Float32Array);
+    let results: ort.InferenceSession.ReturnType | null = null;
+    try {
+      results = await this.session!.run({ input: inputTensor });
+      const output = results['output']!;
+      const logits = Array.from(output.data as Float32Array);
 
-    // Softmax
-    const maxLogit = Math.max(...logits);
-    const exps = logits.map(l => Math.exp(l - maxLogit));
-    const sumExp = exps.reduce((a, b) => a + b, 0);
-    const probabilities = exps.map(e => e / sumExp);
+      // Softmax
+      const maxLogit = Math.max(...logits);
+      const exps = logits.map(l => Math.exp(l - maxLogit));
+      const sumExp = exps.reduce((a, b) => a + b, 0);
+      const probabilities = exps.map(e => e / sumExp);
 
-    const faultLabel = probabilities.indexOf(Math.max(...probabilities));
-    const confidence = probabilities[faultLabel]!;
+      const faultLabel = probabilities.indexOf(Math.max(...probabilities));
+      const confidence = probabilities[faultLabel]!;
 
-    return {
-      faultLabel,
-      faultName: CLASS_NAMES[faultLabel] || `Unknown(${faultLabel})`,
-      confidence,
-      probabilities,
-    };
+      return {
+        faultLabel,
+        faultName: CLASS_NAMES[faultLabel] || `Unknown(${faultLabel})`,
+        confidence,
+        probabilities,
+      };
+    } finally {
+      // Explicitly release tensor memory if dispose method exists
+      (inputTensor as any)?.dispose?.();
+      if (results && results['output']) {
+        (results['output'] as any)?.dispose?.();
+      }
+    }
   }
 
   /**
-   * Reset the sliding window (e.g., on new session).
+   * Reset the sliding window for a stream (or all streams if no streamId is provided).
    */
-  reset(): void {
-    this.windowBuffer = [];
+  reset(streamId?: string): void {
+    if (streamId) {
+      this.windowBuffers.delete(streamId);
+    } else {
+      this.windowBuffers.clear();
+    }
   }
 }
 

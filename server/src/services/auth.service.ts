@@ -20,7 +20,8 @@ if (!JWT_SECRET_RAW || JWT_SECRET_RAW.length < 32) {
   }
   console.warn('⚠ WARNING: JWT_SECRET not set or too short (min 32 chars). Using dev default — NOT SAFE FOR PRODUCTION.');
 }
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW || crypto.randomBytes(32).toString('hex'));
+const DEV_JWT_SECRET_FALLBACK = 'energiamind-dev-jwt-secret-do-not-use-in-prod-32chars!';
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW || (process.env['NODE_ENV'] === 'production' ? crypto.randomBytes(32).toString('hex') : DEV_JWT_SECRET_FALLBACK));
 const ACCESS_TOKEN_TTL = '15m';
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const MAX_FAILED_ATTEMPTS = 5;
@@ -211,17 +212,24 @@ export async function refresh(
 ): Promise<TokenPair> {
   const [session] = await db.select().from(sessions).where(eq(sessions.refreshToken, refreshToken)).limit(1);
 
-  if (!session || session.revoked || session.expiresAt < new Date()) {
-    // Reuse detection — revoke entire family
-    if (session) {
-      console.warn(`[Auth] SECURITY: Refresh token reuse detected for user ${session.userId}, family ${session.tokenFamily}. Revoking all tokens in family.`);
-      await db.delete(sessions).where(eq(sessions.tokenFamily, session.tokenFamily));
-      await logActivity(session.userId, 'system' as any, 'TOKEN_REUSE_DETECTED', `user:${session.userId}`, {
-        tokenFamily: session.tokenFamily,
-        revoked: session.revoked,
-        expired: session.expiresAt < new Date(),
-      }, ip, userAgent);
-    }
+  if (!session) {
+    throw new AuthError('Invalid refresh token', 401);
+  }
+
+  // Handle expired token
+  if (session.expiresAt < new Date()) {
+    await db.delete(sessions).where(eq(sessions.id, session.id));
+    throw new AuthError('Refresh token expired', 401);
+  }
+
+  // Handle reuse of revoked token (Security violation)
+  if (session.revoked) {
+    console.warn(`[Auth] SECURITY: Refresh token reuse detected for user ${session.userId}, family ${session.tokenFamily}. Revoking all tokens in family.`);
+    await db.delete(sessions).where(eq(sessions.tokenFamily, session.tokenFamily));
+    await logActivity(session.userId, 'system' as any, 'TOKEN_REUSE_DETECTED', `user:${session.userId}`, {
+      tokenFamily: session.tokenFamily,
+      revoked: true,
+    }, ip, userAgent);
     throw new AuthError('Invalid refresh token', 401);
   }
 

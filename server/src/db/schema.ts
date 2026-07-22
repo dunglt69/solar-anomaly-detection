@@ -141,7 +141,7 @@ export const activityLog = sqliteTable('activity_log', {
   actorId: text('actor_id'), // null = SYSTEM
   actorRole: text('actor_role', { enum: ['admin', 'solar_operator', 'security_engineer', 'system'] }).notNull().default('system'),
   action: text('action', {
-    enum: ['LOGIN', 'LOGOUT', 'LOGIN_FAILED', 'VIEW', 'CREATE', 'UPDATE', 'DELETE', 'DETECT', 'ALERT', 'DEVICE_REGISTERED', 'DEVICE_RESET', 'DEVICE_REJECTED'],
+    enum: ['LOGIN', 'LOGOUT', 'LOGIN_FAILED', 'VIEW', 'CREATE', 'UPDATE', 'DELETE', 'DETECT', 'ALERT', 'DEVICE_REGISTERED', 'DEVICE_RESET', 'DEVICE_REJECTED', 'TOKEN_REUSE_DETECTED'],
   }).notNull(),
   target: text('target'), // e.g., "ticket:INC-2026-00042"
   details: text('details', { mode: 'json' }),

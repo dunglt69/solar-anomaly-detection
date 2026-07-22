@@ -112,11 +112,11 @@ class DetectionService {
   /**
    * Run the AI detection pipeline on a single reading.
    */
-  async detect(reading: RawReading): Promise<DetectionResult> {
+  async detect(reading: RawReading, streamId: string = 'default'): Promise<DetectionResult> {
     const threshold = await this.getConfidenceThreshold();
 
     // Call AI (InceptionTime ONNX Classifier)
-    const aiResult = await aiService.addReadingAndPredict(reading);
+    const aiResult = await aiService.addReadingAndPredict(reading, streamId);
 
     if (aiResult) {
       const faultDetected = aiResult.faultLabel !== 0 && aiResult.confidence > threshold;

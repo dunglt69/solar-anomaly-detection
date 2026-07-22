@@ -62,6 +62,12 @@ async function main() {
     }
     try {
       const json = JSON.parse(bodyStr);
+      if (typeof json !== 'object' || json === null) {
+        const err: any = new Error('Invalid JSON body structure');
+        err.statusCode = 400;
+        done(err, undefined);
+        return;
+      }
       done(null, json);
     } catch (err: any) {
       err.statusCode = 400;
@@ -120,8 +126,13 @@ async function main() {
         }
       }
       const bypassKey = process.env['RATE_LIMIT_BYPASS_KEY'];
-      if (bypassKey && req.headers['x-bypass-rate-limit'] === bypassKey) {
-        return true;
+      const headerKey = req.headers['x-bypass-rate-limit'];
+      if (bypassKey && typeof headerKey === 'string' && headerKey.length === bypassKey.length) {
+        try {
+          if (crypto.timingSafeEqual(Buffer.from(headerKey), Buffer.from(bypassKey))) {
+            return true;
+          }
+        } catch { /* ignore buffer mismatch */ }
       }
       return false;
     },
@@ -152,6 +163,8 @@ async function main() {
   await app.register(authPlugin);
   await app.register(wsPlugin);
 
+  let cleanupInterval: NodeJS.Timeout | null = null;
+
   app.addHook('onReady', async () => {
     const { cleanupExpiredSessions } = await import('./services/auth.service.js');
     const cleanup = async () => {
@@ -163,7 +176,14 @@ async function main() {
       }
     };
     await cleanup();
-    setInterval(cleanup, 60 * 60 * 1000);
+    cleanupInterval = setInterval(cleanup, 60 * 60 * 1000);
+  });
+
+  app.addHook('onClose', async () => {
+    if (cleanupInterval) {
+      clearInterval(cleanupInterval);
+      cleanupInterval = null;
+    }
   });
 
   // Routes

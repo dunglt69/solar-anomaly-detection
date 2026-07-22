@@ -164,7 +164,7 @@ App
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/api/health` | Public | Health check (`{ status, timestamp }`) |
+| GET | `/health` | Public | Health check (`{ status: "ok" }`) |
 | POST | `/api/v1/auth/login` | Public | Returns access + refresh tokens |
 | POST | `/api/v1/auth/refresh` | Refresh | Rotate tokens (rate limited: 10/min) |
 | POST | `/api/v1/auth/logout` | Auth | Invalidate session |
@@ -233,12 +233,12 @@ App
 | **Device Binding Policy** | 1:1 hardware device binding model. Registers device on first login; mismatch blocks login |
 | **Device fingerprint** | SHA-256 hash (upgraded from DJB2 32-bit in D11 audit) |
 | **Account Lockout & Unlock** | 5 failed attempts lockout (30-min). Admin can manually unlock account via Admin panel |
-| **DDoS & Overload** | `@fastify/rate-limit` (300 req/min) + `@fastify/under-pressure` (1GB heap limit) |
+| **DDoS & Overload** | `@fastify/rate-limit` (300 req/min) + `@fastify/under-pressure` (2GB heap limit / 3GB RSS) |
 | **HTTP Security Headers**| Helmet integration with hardened production Content-Security-Policy (removed `'unsafe-inline'` from scriptSrc to eliminate XSS vectors) |
 | **Health endpoint** | Returns only `{ status: "ok" }` — no uptime, version, or environment info leaked |
 | **Audit logging** | All auth, administration, device registrations, resets, and rejects actions logged with actor details, IP, user-agent, and hardware signature |
 | **Input validation** | JSON Schema at Fastify boundary |
-| **API key** | Separate key for telemetry ingestion (no user auth) |
+| **Telemetry Ingestion Auth** | Authenticated via JWT Bearer tokens |
 | **No sensitive logging** | Seed script and auth flows never log passwords or secrets |
 
 ---

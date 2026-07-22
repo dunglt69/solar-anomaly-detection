@@ -21,18 +21,14 @@ async function wsPlugin(fastify: FastifyInstance) {
   await fastify.register(websocket, {
     options: {
       maxPayload: 1024 * 64,
-      handleProtocols: (protocols: Set<string> | string[]) => {
-        const list = protocols instanceof Set ? [...protocols] : protocols;
-        const bearer = list.find((p: string) => p.startsWith('bearer-'));
-        return bearer || false;
-      }
+      handleProtocols: () => false, // Do not reflect secret bearer subprotocol in response header
     }
   });
 
   // Register broadcast function with telemetry routes
   setBroadcast(wsBroadcast);
 
-  // WebSocket route — requires bearer-<JWT> subprotocol for authentication
+  // WebSocket route — authenticates via token query parameter or bearer subprotocol
   fastify.get('/ws/telemetry', { 
     websocket: true,
     config: {
@@ -42,8 +38,14 @@ async function wsPlugin(fastify: FastifyInstance) {
       }
     }
   }, async (socket, request) => {
+    // 1. Extract token from query parameter (recommended per OWASP WebSocket guidelines)
+    const queryToken = (request.query as { token?: string })?.token;
+    
+    // 2. Fallback to Sec-WebSocket-Protocol header for backward compatibility
     const protocol = request.headers['sec-websocket-protocol'] as string | undefined;
-    const token = protocol?.startsWith('bearer-') ? protocol.slice(7) : null;
+    const headerToken = protocol?.startsWith('bearer-') ? protocol.slice(7) : null;
+
+    const token = queryToken || headerToken;
 
     if (!token) {
       socket.send(JSON.stringify({ type: 'error', message: 'Missing authentication token' }));
