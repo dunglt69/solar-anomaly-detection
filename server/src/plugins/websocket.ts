@@ -35,7 +35,10 @@ async function wsPlugin(fastify: FastifyInstance) {
   fastify.get('/ws/telemetry', { 
     websocket: true,
     config: {
-      rateLimit: false
+      rateLimit: {
+        max: 100,
+        timeWindow: '1 minute'
+      }
     }
   }, async (socket, request) => {
     // 1. Extract token from query parameter (recommended per OWASP WebSocket guidelines)
