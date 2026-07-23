@@ -74,9 +74,8 @@ export async function seed() {
     const path = await import('node:path');
     const credsPath = path.resolve(process.cwd(), '.admin_credentials.tmp');
     fs.writeFileSync(credsPath, `Username: ${ADMIN_USERNAME}\nPassword: ${finalPassword}\n`, 'utf-8');
-    console.log(`⚠️  Generated admin password has been written to: ${credsPath}`);
-    console.log(`   Username: ${ADMIN_USERNAME}`);
-    console.log('   This file contains your generated admin password and will auto-delete upon exit or in 60 seconds.');
+    console.log(`⚠️  Initial setup file created: ${credsPath}`);
+    console.log('   Temporary file will auto-delete upon exit or in 60 seconds.');
     // Ensure cleanup on ANY exit (normal, error, SIGINT)
     const cleanup = () => {
       try { fs.unlinkSync(credsPath); } catch { /* already deleted */ }
