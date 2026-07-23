@@ -28,6 +28,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       body: {
         type: 'object',
         required: ['username', 'password'],
+        additionalProperties: false,
         properties: {
           username: { type: 'string', minLength: 1 },
           password: { type: 'string', minLength: 1 },

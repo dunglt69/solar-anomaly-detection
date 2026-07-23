@@ -41,6 +41,17 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
     Body: { status?: string; assigneeId?: string; resolutionSummary?: string };
   }>('/api/v1/tickets/:id', {
     preHandler: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['acknowledged', 'in_progress', 'resolved', 'escalated'] },
+          assigneeId: { type: 'string', maxLength: 50 },
+          resolutionSummary: { type: 'string', maxLength: 5000 },
+        },
+        additionalProperties: false,
+      },
+    },
   }, async (request, reply) => {
     try {
       const user = request.user!;

@@ -55,17 +55,22 @@ export function compareHardwareSignatures(
   current: HardwareSignature,
 ): { match: boolean; score: number; mismatches: string[] } {
   let matched = 0;
+  let comparable = 0;
   const mismatches: string[] = [];
 
   for (const key of HW_COMPONENTS) {
     const regVal = registered[key];
     const curVal = current[key];
 
-    // null == null counts as match; null vs non-null is mismatch
-    if (regVal === curVal) {
-      matched++;
-    } else if (regVal === null || curVal === null) {
-      // One side has data, other doesn't — mild mismatch
+    // Skip null==null — don't count in either direction
+    if (regVal === null && curVal === null) {
+      continue;
+    }
+
+    comparable++;
+
+    if (regVal === null || curVal === null) {
+      // One side has data, other doesn't — mismatch
       mismatches.push(`${key}: ${String(regVal)} → ${String(curVal)}`);
     } else if (typeof regVal === 'string' && typeof curVal === 'string') {
       // String comparison (case-insensitive for GPU strings)
@@ -84,8 +89,9 @@ export function compareHardwareSignatures(
     }
   }
 
-  const score = matched / HW_COMPONENTS.length;
-  return { match: score >= MATCH_THRESHOLD, score, mismatches };
+  // Require at least 4 comparable (non-null) components to make a decision
+  const score = comparable > 0 ? matched / comparable : 0;
+  return { match: score >= MATCH_THRESHOLD && comparable >= 4, score, mismatches };
 }
 
 // ─── Core Operations ────────────────────────────────────────────────

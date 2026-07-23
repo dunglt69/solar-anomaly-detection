@@ -1,6 +1,6 @@
 # EnergiaMind — System Architecture
 
-> **Version:** 5.0 | **Last Updated:** 2026-06-18
+> **Version:** 5.1 | **Last Updated:** 2026-07-23
 
 ---
 
@@ -104,7 +104,7 @@ Client: WebSocket message → Zustand store update → ECharts re-render
 
 | Table | Key Columns | Purpose |
 |---|---|---|
-| **users** | id, employeeId, username, email, personalEmail, dob, displayName, passwordHash, role, failedAttempts, lockedUntil, createdAt, updatedAt | Auth + RBAC |
+| **users** | id, employeeId, username, email, personalEmail, dob, displayName, passwordHash, role, avatarUrl, failedAttempts, lockedUntil, createdAt, updatedAt | Auth + RBAC |
 | **sessions** | id, userId, refreshToken, tokenFamily, ip, userAgent, revoked, expiresAt, createdAt | Token management |
 | **telemetry** | id, timestamp, vdc1, vdc2, idc1, idc2, irr, pvt, pdc1, pdc2, pdcTotal, faultLabel | Dual-string time-series data |
 | **alerts** | id, timestamp, severity, faultType, confidence, detectionLayer, telemetryId, acknowledged, acknowledgedBy, acknowledgedAt, ticketId | Anomaly alerts |
@@ -127,7 +127,7 @@ Client: WebSocket message → Zustand store update → ECharts re-render
 
 ```
 App
-├── AuthProvider (JWT context)
+├── Zustand authStore (JWT context)
 ├── ThemeProvider (dark/light)
 ├── Router
 │   ├── /login → LoginPage
@@ -153,6 +153,8 @@ App
 │   │       │   ├── ActivityLogViewer
 │   │       │   └── SystemSettings
 │   │       └── /settings → ProfileSettings
+│   ├── /access-denied → AccessDeniedPage (device binding rejection)
+│   ├── /blocked → BlockedPage (account locked)
 └── WebSocketProvider (global connection)
 ```
 
@@ -164,7 +166,7 @@ App
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/health` | Public | Health check (`{ status: "ok" }`) |
+| GET | `/api/health` | Public | Health check (`{ status: "ok" }`) |
 | POST | `/api/v1/auth/login` | Public | Returns access + refresh tokens |
 | POST | `/api/v1/auth/refresh` | Refresh | Rotate tokens (rate limited: 10/min) |
 | POST | `/api/v1/auth/logout` | Auth | Invalidate session |
@@ -185,7 +187,6 @@ App
 | GET | `/api/v1/tickets` | Auth | List tickets |
 | GET | `/api/v1/tickets/:id` | Auth | Get ticket by ID |
 | GET | `/api/v1/tickets/stats` | Auth | Ticket statistics |
-| POST | `/api/v1/tickets` | Auth | Create ticket |
 | PATCH | `/api/v1/tickets/:id` | Auth | Update status/assignee (IDOR-protected) |
 | POST | `/api/v1/tickets/:id/comments` | Auth | Add comment (max 5000 chars) |
 | GET | `/api/v1/analytics/daily-energy` | Auth | Daily energy data |
@@ -264,8 +265,11 @@ Production (Future):
   │ Nginx / Caddy     │ ← Reverse proxy + TLS
   │  ├── /api → :3000 │
   │  ├── /ws  → :3000 │
-  │  └── /*   → /dist │ ← Static React build
+  │  └── /*   → /dist │ ← Static React build (Nginx serves)
   └───────────────────┘
+
+> **Note:** In development, Fastify serves static files directly via `@fastify/static`.
+> Nginx/Caddy is the recommended reverse proxy for production TLS termination.
 ```
 
 ---

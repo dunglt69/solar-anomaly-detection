@@ -92,7 +92,7 @@ export default function DashboardPage() {
       clearInterval(chartTimer);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [fetchChartData, fetchKPIs, fetchLatestPoint, connectWebSocket, disconnectWebSocket, preFetchAllRanges]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRefresh = useCallback(() => {
     fetchChartData();

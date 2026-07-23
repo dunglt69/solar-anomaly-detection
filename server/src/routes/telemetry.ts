@@ -33,6 +33,7 @@ export default async function telemetryRoutes(fastify: FastifyInstance) {
         items: {
           type: 'object',
           required: ['timestamp', 'vdc1', 'vdc2', 'idc1', 'idc2', 'irr', 'pvt'],
+          additionalProperties: false,
           properties: {
             timestamp: { oneOf: [{ type: 'string' }, { type: 'number' }] },
             vdc1: { type: 'number', minimum: 0, maximum: 1000 },

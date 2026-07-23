@@ -86,9 +86,9 @@ export const alerts = sqliteTable('alerts', {
   faultType: integer('fault_type').notNull(), // 0-4 from taxonomy
   confidence: real('confidence').notNull(),
   detectionLayer: text('detection_layer', { enum: ['statistical', 'rule', 'ai'] }).notNull(),
-  telemetryId: integer('telemetry_id').references(() => telemetry.id),
+  telemetryId: integer('telemetry_id').references(() => telemetry.id, { onDelete: 'set null' }),
   acknowledged: integer('acknowledged', { mode: 'boolean' }).notNull().default(false),
-  acknowledgedBy: text('acknowledged_by').references(() => users.id),
+  acknowledgedBy: text('acknowledged_by').references(() => users.id, { onDelete: 'set null' }),
   acknowledgedAt: integer('acknowledged_at', { mode: 'timestamp' }),
   ticketId: text('ticket_id').references(() => tickets.id),
 }, (table) => [
@@ -109,7 +109,7 @@ export const tickets = sqliteTable('tickets', {
   affectedComponent: text('affected_component'),
   title: text('title').notNull(),
   description: text('description'),
-  assigneeId: text('assignee_id').references(() => users.id),
+  assigneeId: text('assignee_id').references(() => users.id, { onDelete: 'set null' }),
   createdBy: text('created_by'), // null = system auto-created
   alertId: text('alert_id'),
   wasEscalated: integer('was_escalated', { mode: 'boolean' }).notNull().default(false),
@@ -127,7 +127,7 @@ export const tickets = sqliteTable('tickets', {
 export const ticketComments = sqliteTable('ticket_comments', {
   id: text('id').primaryKey(),
   ticketId: text('ticket_id').notNull().references(() => tickets.id, { onDelete: 'cascade' }),
-  authorId: text('author_id').notNull().references(() => users.id),
+  authorId: text('author_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 }, (table) => [

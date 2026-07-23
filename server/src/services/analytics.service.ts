@@ -2,6 +2,7 @@ import { db } from '../db/index.js';
 import { alerts, tickets } from '../db/schema.js';
 import { gte, lte, and, sql, count, eq } from 'drizzle-orm';
 import { FAULT_LABELS } from './telemetry.service.js';
+import { parseTimeRange, toUnixSeconds } from '../utils/timestamps.js';
 
 // ─── Daily energy production ────────────────────────────────────────
 export interface DailyEnergy {
@@ -14,14 +15,11 @@ export interface DailyEnergy {
 }
 
 export async function getDailyEnergy(from?: string, to?: string): Promise<DailyEnergy[]> {
-  // Safe defaults: parameterised timestamps avoid SQL injection
-  const fromTs = from ? Math.floor(new Date(from).getTime() / 1000) : 0;
-  const toTs = to ? Math.floor(new Date(to).getTime() / 1000) : Math.floor(Date.now() / 1000) + 86400;
-  if (isNaN(fromTs) || isNaN(toTs)) throw new Error('Invalid timestamp');
+  const { fromTs, toTs } = parseTimeRange(from, to);
 
   const rows = await db.all(sql`
     SELECT
-      DATE("timestamp", 'unixepoch', 'localtime') as date,
+      DATE("timestamp", 'unixepoch', 'utc') as date,
       ROUND(AVG(pdc_total), 2) as avgPower,
       ROUND(MAX(pdc_total), 2) as maxPower,
       ROUND(AVG(irr), 2) as avgIrr,
@@ -31,8 +29,8 @@ export async function getDailyEnergy(from?: string, to?: string): Promise<DailyE
       MAX("timestamp") as maxTs
     FROM telemetry
     WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
-    GROUP BY DATE("timestamp", 'unixepoch', 'localtime')
-    ORDER BY DATE("timestamp", 'unixepoch', 'localtime')
+    GROUP BY DATE("timestamp", 'unixepoch', 'utc')
+    ORDER BY DATE("timestamp", 'unixepoch', 'utc')
   `) as any[];
 
   return rows.map((r: any) => {
@@ -62,20 +60,20 @@ export interface HourlyProfile {
 export async function getHourlyProfile(date: string): Promise<HourlyProfile[]> {
   const dayStart = new Date(`${date}T00:00:00`);
   const dayEnd = new Date(`${date}T23:59:59`);
-  const dayStartUnix = Math.floor(dayStart.getTime() / 1000);
-  const dayEndUnix = Math.floor(dayEnd.getTime() / 1000);
+  const dayStartUnix = toUnixSeconds(dayStart);
+  const dayEndUnix = toUnixSeconds(dayEnd);
   if (isNaN(dayStartUnix) || isNaN(dayEndUnix)) throw new Error('Invalid date');
 
   const rows = await db.all(sql`
     SELECT
-      CAST(strftime('%H', "timestamp", 'unixepoch', 'localtime') AS INTEGER) as hour,
+      CAST(strftime('%H', "timestamp", 'unixepoch', 'utc') AS INTEGER) as hour,
       ROUND(AVG(pdc_total), 2) as avgPower,
       ROUND(AVG(irr), 2) as avgIrr,
       ROUND(AVG(pvt), 1) as avgTemp
     FROM telemetry
     WHERE "timestamp" >= ${dayStartUnix} AND "timestamp" <= ${dayEndUnix}
-    GROUP BY strftime('%H', "timestamp", 'unixepoch', 'localtime')
-    ORDER BY CAST(strftime('%H', "timestamp", 'unixepoch', 'localtime') AS INTEGER)
+    GROUP BY strftime('%H', "timestamp", 'unixepoch', 'utc')
+    ORDER BY CAST(strftime('%H', "timestamp", 'unixepoch', 'utc') AS INTEGER)
   `) as any[];
 
   return rows.map((r: any) => ({
@@ -97,14 +95,11 @@ export interface FaultTrend {
 }
 
 export async function getFaultTrend(from?: string, to?: string): Promise<FaultTrend[]> {
-  // Safe defaults: parameterised timestamps avoid SQL injection
-  const fromTs = from ? Math.floor(new Date(from).getTime() / 1000) : 0;
-  const toTs = to ? Math.floor(new Date(to).getTime() / 1000) : Math.floor(Date.now() / 1000) + 86400;
-  if (isNaN(fromTs) || isNaN(toTs)) throw new Error('Invalid timestamp');
+  const { fromTs, toTs } = parseTimeRange(from, to);
 
   const rows = await db.all(sql`
     SELECT
-      DATE(timestamp, 'unixepoch', 'localtime') as date,
+      DATE(timestamp, 'unixepoch', 'utc') as date,
       SUM(CASE WHEN fault_type = 1 THEN 1 ELSE 0 END) as shortCircuit,
       SUM(CASE WHEN fault_type = 2 THEN 1 ELSE 0 END) as degradation,
       SUM(CASE WHEN fault_type = 3 THEN 1 ELSE 0 END) as openCircuit,
@@ -112,8 +107,8 @@ export async function getFaultTrend(from?: string, to?: string): Promise<FaultTr
       COUNT(*) as total
     FROM alerts
     WHERE timestamp >= ${fromTs} AND timestamp <= ${toTs}
-    GROUP BY DATE(timestamp, 'unixepoch', 'localtime')
-    ORDER BY DATE(timestamp, 'unixepoch', 'localtime')
+    GROUP BY DATE(timestamp, 'unixepoch', 'utc')
+    ORDER BY DATE(timestamp, 'unixepoch', 'utc')
   `) as any[];
 
   return rows.map((r: any) => ({
@@ -138,10 +133,7 @@ export interface SystemSummary {
 }
 
 export async function getSystemSummary(from?: string, to?: string): Promise<SystemSummary> {
-  // Safe defaults: parameterised timestamps avoid SQL injection
-  const fromTs = from ? Math.floor(new Date(from).getTime() / 1000) : 0;
-  const toTs = to ? Math.floor(new Date(to).getTime() / 1000) : Math.floor(Date.now() / 1000) + 86400;
-  if (isNaN(fromTs) || isNaN(toTs)) throw new Error('Invalid timestamp');
+  const { fromTs, toTs } = parseTimeRange(from, to);
 
   // Telemetry stats via parameterised sql tagged template
   const telStatsRows = await db.all(sql`
@@ -151,7 +143,7 @@ export async function getSystemSummary(from?: string, to?: string): Promise<Syst
       SUM(CASE WHEN fault_label > 0 THEN 1 ELSE 0 END) as faultCount,
       MIN("timestamp") as minTs,
       MAX("timestamp") as maxTs,
-      COUNT(DISTINCT DATE("timestamp", 'unixepoch', 'localtime')) as daysWithData
+      COUNT(DISTINCT DATE("timestamp", 'unixepoch', 'utc')) as daysWithData
     FROM telemetry
     WHERE "timestamp" >= ${fromTs} AND "timestamp" <= ${toTs}
   `) as any[];

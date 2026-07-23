@@ -24,8 +24,8 @@ CREATE TABLE `alerts` (
 	`acknowledged_by` text,
 	`acknowledged_at` integer,
 	`ticket_id` text,
-	FOREIGN KEY (`telemetry_id`) REFERENCES `telemetry`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`acknowledged_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`telemetry_id`) REFERENCES `telemetry`(`id`) ON UPDATE no action ON DELETE set null,
+	FOREIGN KEY (`acknowledged_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null,
 	FOREIGN KEY (`ticket_id`) REFERENCES `tickets`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -88,7 +88,7 @@ CREATE TABLE `ticket_comments` (
 	`content` text NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`ticket_id`) REFERENCES `tickets`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`author_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`author_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE INDEX `comments_ticket_idx` ON `ticket_comments` (`ticket_id`);--> statement-breakpoint
@@ -108,7 +108,7 @@ CREATE TABLE `tickets` (
 	`updated_at` integer NOT NULL,
 	`resolved_at` integer,
 	`resolution_summary` text,
-	FOREIGN KEY (`assignee_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`assignee_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
 CREATE INDEX `tickets_status_idx` ON `tickets` (`status`);--> statement-breakpoint

@@ -26,13 +26,18 @@ export interface TicketQuery {
   offset?: number;
 }
 
+// Type aliases from schema enum columns
+type TicketStatus = typeof tickets.status.enumValues[number];
+type TicketSeverity = typeof tickets.severity.enumValues[number];
+
 export async function queryTickets(q: TicketQuery) {
   const conditions = [];
   if (q.status) {
-    const statuses = q.status.split(',');
-    conditions.push(inArray(tickets.status, statuses as any));
+    const statuses = q.status.split(',') as TicketStatus[];
+    conditions.push(inArray(tickets.status, statuses));
   }
-  if (q.severity) conditions.push(eq(tickets.severity, q.severity as any));
+  if (q.severity) conditions.push(eq(tickets.severity, q.severity as TicketSeverity));
+
   if (q.assigneeId) conditions.push(eq(tickets.assigneeId, q.assigneeId));
   if (q.alertId) conditions.push(eq(tickets.alertId, q.alertId));
 
@@ -112,7 +117,15 @@ export async function updateTicket(
   if (updates.assigneeId !== undefined) setData.assigneeId = updates.assigneeId;
   if (updates.resolutionSummary !== undefined) setData.resolutionSummary = updates.resolutionSummary;
 
-  await db.update(tickets).set(setData).where(eq(tickets.id, id));
+  const updateWhere = updates.status
+    ? and(eq(tickets.id, id), eq(tickets.status, existing.status))
+    : eq(tickets.id, id);
+  const result = await db.update(tickets).set(setData).where(updateWhere).returning();
+  if (result.length === 0) {
+    const err = new Error('Ticket was modified concurrently. Please refresh and try again.');
+    (err as any).isConflict = true;
+    throw err;
+  }
 
   return getTicketById(id);
 }

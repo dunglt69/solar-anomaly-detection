@@ -8,6 +8,21 @@ import { FAULT_LABELS } from '../utils/constants.js';
 // Re-export FAULT_LABELS for backwards compatibility
 export { FAULT_LABELS };
 
+// ─── Config cache with TTL ──────────────────────────────────────────
+const configCache = new Map<string, { value: unknown; expiresAt: number }>();
+const CONFIG_CACHE_TTL = 60_000; // 60 seconds
+
+function getCachedConfig(key: string): unknown | undefined {
+  const entry = configCache.get(key);
+  if (entry && Date.now() < entry.expiresAt) return entry.value;
+  configCache.delete(key);
+  return undefined;
+}
+
+function setCachedConfig(key: string, value: unknown): void {
+  configCache.set(key, { value, expiresAt: Date.now() + CONFIG_CACHE_TTL });
+}
+
 // ─── Severity mapping ───────────────────────────────────────────────
 const FAULT_SEVERITY: Record<number, 'info' | 'warning' | 'critical' | 'emergency'> = {
   0: 'info',
@@ -19,47 +34,80 @@ const FAULT_SEVERITY: Record<number, 'info' | 'warning' | 'critical' | 'emergenc
 
 const DEFAULT_COOLDOWN_MINUTES = 5;
 
-// ─── Config helpers (cached lightly via per-call reads; cheap for SQLite) ──
+// ─── Config helpers ──
 async function getConfigNumber(key: string, field: string, fallback: number): Promise<number> {
+  const cached = getCachedConfig(`${key}:${field}:number`);
+  if (cached !== undefined) return cached as number;
   try {
     const [row] = await db.select({ value: config.value }).from(config).where(eq(config.key, key)).limit(1);
     if (row?.value != null) {
-      if (typeof row.value === 'number' && isFinite(row.value)) return row.value;
+      if (typeof row.value === 'number' && isFinite(row.value)) {
+        setCachedConfig(`${key}:${field}:number`, row.value);
+        return row.value;
+      }
       if (typeof row.value === 'object' && row.value !== null && field in (row.value as object)) {
         const v = Number((row.value as Record<string, unknown>)[field]);
-        if (isFinite(v)) return v;
+        if (isFinite(v)) {
+          setCachedConfig(`${key}:${field}:number`, v);
+          return v;
+        }
       }
     }
   } catch { /* use fallback */ }
+  setCachedConfig(`${key}:${field}:number`, fallback);
   return fallback;
 }
 
 async function getConfigBoolean(key: string, fallback = false): Promise<boolean> {
+  const cached = getCachedConfig(`${key}:boolean`);
+  if (cached !== undefined) return cached as boolean;
   try {
     const [row] = await db.select({ value: config.value }).from(config).where(eq(config.key, key)).limit(1);
-    if (row?.value === true || row?.value === false) return row.value;
-    if (typeof row?.value === 'string') return row.value === 'true';
+    if (row?.value === true || row?.value === false) {
+      setCachedConfig(`${key}:boolean`, row.value);
+      return row.value;
+    }
+    if (typeof row?.value === 'string') {
+      const v = row.value === 'true';
+      setCachedConfig(`${key}:boolean`, v);
+      return v;
+    }
     if (row?.value && typeof row.value === 'object' && 'enabled' in (row.value as object)) {
-      return Boolean((row.value as Record<string, unknown>).enabled);
+      const v = Boolean((row.value as Record<string, unknown>).enabled);
+      setCachedConfig(`${key}:boolean`, v);
+      return v;
     }
   } catch { /* use fallback */ }
+  setCachedConfig(`${key}:boolean`, fallback);
   return fallback;
 }
 
 async function getConfigString(key: string, fallback = ''): Promise<string> {
+  const cached = getCachedConfig(`${key}:string`);
+  if (cached !== undefined) return cached as string;
   try {
     const [row] = await db.select({ value: config.value }).from(config).where(eq(config.key, key)).limit(1);
     if (row?.value !== undefined && row?.value !== null) {
-      if (typeof row.value === 'string') return row.value;
+      if (typeof row.value === 'string') {
+        setCachedConfig(`${key}:string`, row.value);
+        return row.value;
+      }
       if (typeof row.value === 'object') {
         if ('email' in (row.value as object)) {
-          return String((row.value as Record<string, unknown>).email);
+          const v = String((row.value as Record<string, unknown>).email);
+          setCachedConfig(`${key}:string`, v);
+          return v;
         }
-        return JSON.stringify(row.value);
+        const v = JSON.stringify(row.value);
+        setCachedConfig(`${key}:string`, v);
+        return v;
       }
-      return String(row.value);
+      const v = String(row.value);
+      setCachedConfig(`${key}:string`, v);
+      return v;
     }
   } catch { /* use fallback */ }
+  setCachedConfig(`${key}:string`, fallback);
   return fallback;
 }
 
@@ -170,7 +218,7 @@ export async function queryAlerts(q: AlertQuery) {
   const conditions = [];
   if (q.from) conditions.push(gte(alerts.timestamp, new Date(q.from)));
   if (q.to) conditions.push(lte(alerts.timestamp, new Date(q.to)));
-  if (q.severity) conditions.push(eq(alerts.severity, q.severity as any));
+  if (q.severity) conditions.push(eq(alerts.severity, q.severity as typeof alerts.severity.enumValues[number]));
   if (q.acknowledged === 'true') conditions.push(eq(alerts.acknowledged, true));
   if (q.acknowledged === 'false') conditions.push(eq(alerts.acknowledged, false));
 

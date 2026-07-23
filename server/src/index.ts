@@ -23,7 +23,9 @@ import adminRoutes from './routes/admin.js';
 import analyticsRoutes from './routes/analytics.js';
 import configRoutes from './routes/config.js';
 import { aiService } from './services/ai.service.js';
-import { client as dbClient } from './db/index.js';
+import { eq } from 'drizzle-orm';
+import { db, client as dbClient } from './db/index.js';
+import { alerts } from './db/schema.js';
 
 const PORT = Number(process.env['PORT'] || 3000);
 const HOST = process.env['HOST'] || '127.0.0.1';
@@ -150,8 +152,12 @@ async function main() {
     maxRssBytes: 3.0 * 1024 * 1024 * 1024, // 3GB
   });
 
+  const corsOrigin = process.env['CORS_ORIGIN'] || 'http://localhost:5173';
+  if (process.env['NODE_ENV'] === 'production' && corsOrigin === '*') {
+    throw new Error('FATAL: CORS_ORIGIN must not be wildcard (*) in production. Set a specific origin.');
+  }
   await app.register(cors, {
-    origin: process.env['CORS_ORIGIN'] || 'http://localhost:5173',
+    origin: corsOrigin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
@@ -164,6 +170,7 @@ async function main() {
   await app.register(wsPlugin);
 
   let cleanupInterval: NodeJS.Timeout | null = null;
+  let activityLogCleanupInterval: NodeJS.Timeout | null = null;
 
   app.addHook('onReady', async () => {
     const { cleanupExpiredSessions } = await import('./services/auth.service.js');
@@ -177,12 +184,33 @@ async function main() {
     };
     await cleanup();
     cleanupInterval = setInterval(cleanup, 60 * 60 * 1000);
+
+    // Activity log rotation — retain last 90 days
+    const { activityLog: activityLogTable } = await import('./db/schema.js');
+    const { lte } = await import('drizzle-orm');
+    const cleanupActivityLog = async () => {
+      try {
+        const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+        const result = await db.delete(activityLogTable).where(lte(activityLogTable.timestamp, cutoff)).returning();
+        if (result.length > 0) {
+          app.log.info(`Pruned ${result.length} activity log entries older than 90 days`);
+        }
+      } catch (err) {
+        app.log.error(err, 'Failed to cleanup activity log');
+      }
+    };
+    await cleanupActivityLog();
+    activityLogCleanupInterval = setInterval(cleanupActivityLog, 24 * 60 * 60 * 1000); // Daily
   });
 
   app.addHook('onClose', async () => {
     if (cleanupInterval) {
       clearInterval(cleanupInterval);
       cleanupInterval = null;
+    }
+    if (activityLogCleanupInterval) {
+      clearInterval(activityLogCleanupInterval);
+      activityLogCleanupInterval = null;
     }
   });
 
@@ -251,13 +279,14 @@ async function main() {
 
     // Migrate old 'lstm' detection layer values to 'ai'
     try {
-      const result = await dbClient.execute("UPDATE alerts SET detection_layer = 'ai' WHERE detection_layer = 'lstm'");
-      if (result.rowsAffected > 0) {
-        app.log.info(`Migrated ${result.rowsAffected} alert(s): detection_layer 'lstm' → 'ai'`);
+      const result = await db.update(alerts).set({ detectionLayer: 'ai' }).where(eq(alerts.detectionLayer, 'lstm' as any)).returning();
+      if (result.length > 0) {
+        app.log.info(`Migrated ${result.length} alert(s): detection_layer 'lstm' → 'ai'`);
       }
     } catch { /* table may not exist yet */ }
 
     // Sync open tickets whose alerts are already acknowledged
+    // Kept as raw SQL because Drizzle ORM subquery with UPDATE ... WHERE alert_id IN (SELECT id FROM alerts ...) is complex to express cleanly
     try {
       const result = await dbClient.execute(`
         UPDATE tickets 

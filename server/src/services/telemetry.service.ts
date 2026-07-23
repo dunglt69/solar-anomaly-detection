@@ -2,6 +2,7 @@ import { db } from '../db/index.js';
 import { telemetry } from '../db/schema.js';
 import { gte, lte, and, desc, eq, sql } from 'drizzle-orm';
 import { FAULT_LABELS } from '../utils/constants.js';
+import { parseTimeRange, toUnixSeconds } from '../utils/timestamps.js';
 
 // Re-export FAULT_LABELS for backwards compatibility
 export { FAULT_LABELS };
@@ -162,10 +163,7 @@ export async function getAggregatedTelemetry(
 ): Promise<AggregatedPoint[]> {
   const bucketSize = BUCKET_SECONDS[interval] || 60;
 
-  // Safe defaults: parameterised timestamps avoid SQL injection
-  const fromTs = from ? Math.floor(new Date(from).getTime() / 1000) : 0;
-  const toTs = to ? Math.floor(new Date(to).getTime() / 1000) : Math.floor(Date.now() / 1000) + 86400;
-  if (isNaN(fromTs) || isNaN(toTs)) throw new Error('Invalid timestamp');
+  const { fromTs, toTs } = parseTimeRange(from, to);
 
   // Count rows in this range to see if we should downsample for performance
   const countRes = await db.all(sql`
@@ -237,10 +235,7 @@ export async function getDataRange(): Promise<{ minTs: number; maxTs: number; to
 
 // ─── KPI summary ────────────────────────────────────────────────────
 export async function getTelemetryKPIs(from?: string, to?: string) {
-  // Safe defaults: parameterised timestamps avoid SQL injection
-  const fromTs = from ? Math.floor(new Date(from).getTime() / 1000) : 0;
-  const toTs = to ? Math.floor(new Date(to).getTime() / 1000) : Math.floor(Date.now() / 1000) + 86400;
-  if (isNaN(fromTs) || isNaN(toTs)) throw new Error('Invalid timestamp');
+  const { fromTs, toTs } = parseTimeRange(from, to);
 
   // Count first for exact total records
   const countRes = await db.all(sql`
@@ -318,7 +313,7 @@ export async function getTelemetryKPIs(from?: string, to?: string) {
 export async function getDailyYieldToday() {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayStartUnix = Math.floor(todayStart.getTime() / 1000);
+  const todayStartUnix = toUnixSeconds(todayStart);
 
   const rows = await db.all(sql`
     SELECT

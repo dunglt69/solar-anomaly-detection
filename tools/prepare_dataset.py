@@ -78,8 +78,8 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["pdc_total"] = df["pdc1"] + df["pdc2"]
     # Ratio/diff features (critical for 2-string fault detection)
     thresh = 1e-6
-    df["vdc_ratio"] = np.where(df["vdc2"] > thresh, df["vdc1"] / df["vdc2"], 1.0)
-    df["idc_ratio"] = np.where(df["idc2"] > thresh, df["idc1"] / df["idc2"], 1.0)
+    df["vdc_ratio"] = np.where(np.abs(df["vdc2"]) > thresh, df["vdc1"] / df["vdc2"], 1.0)
+    df["idc_ratio"] = np.where(np.abs(df["idc2"]) > thresh, df["idc1"] / df["idc2"], 1.0)
     df["vdc_ratio"] = df["vdc_ratio"].clip(0.0, 5.0)
     df["idc_ratio"] = df["idc_ratio"].clip(0.0, 5.0)
     df["vdc_diff"] = (df["vdc1"] - df["vdc2"]).abs()

@@ -4,6 +4,7 @@ import websocket from '@fastify/websocket';
 import type { WebSocket } from 'ws';
 import { setBroadcast } from '../routes/telemetry.js';
 import { verifyAccessToken } from '../services/auth.service.js';
+import { trackUserConnection, untrackUserConnection, closeUserConnections } from '../services/wsConnections.js';
 
 const clients = new Set<WebSocket>();
 
@@ -17,11 +18,13 @@ export function wsBroadcast(data: unknown) {
   }
 }
 
+// closeUserConnections is re-exported from wsConnections for backward compatibility
+export { closeUserConnections };
+
 async function wsPlugin(fastify: FastifyInstance) {
   await fastify.register(websocket, {
     options: {
       maxPayload: 1024 * 64,
-      handleProtocols: () => false, // Do not reflect secret bearer subprotocol in response header
     }
   });
 
@@ -32,10 +35,7 @@ async function wsPlugin(fastify: FastifyInstance) {
   fastify.get('/ws/telemetry', { 
     websocket: true,
     config: {
-      rateLimit: {
-        max: 30,
-        timeWindow: '1 minute'
-      }
+      rateLimit: false
     }
   }, async (socket, request) => {
     // 1. Extract token from query parameter (recommended per OWASP WebSocket guidelines)
@@ -54,8 +54,13 @@ async function wsPlugin(fastify: FastifyInstance) {
     }
 
     try {
-      await verifyAccessToken(token);
-    } catch {
+      const payload = await verifyAccessToken(token);
+      // Track connection by userId for logout-aware disconnection
+      const userId = payload.sub;
+      trackUserConnection(userId, socket);
+      (socket as any)._userId = userId; // Store for cleanup
+    } catch (err) {
+      fastify.log.error(err, 'WebSocket token verification failed');
       socket.send(JSON.stringify({ type: 'error', message: 'Invalid or expired token' }));
       socket.close(1008, 'Invalid or expired token');
       return;
@@ -74,15 +79,23 @@ async function wsPlugin(fastify: FastifyInstance) {
       }
     }, 10 * 60 * 1000);
 
-    socket.on('close', () => {
+    socket.on('close', (code, reason) => {
       clearInterval(revalidateInterval);
       clients.delete(socket);
-      fastify.log.info(`WebSocket client disconnected (total: ${clients.size})`);
+      const uid = (socket as any)._userId as string | undefined;
+      if (uid) {
+        untrackUserConnection(uid, socket);
+      }
+      fastify.log.info(`WebSocket client disconnected (code=${code}, reason="${reason?.toString()}") (total: ${clients.size})`);
     });
 
     socket.on('error', () => {
       clearInterval(revalidateInterval);
       clients.delete(socket);
+      const uid = (socket as any)._userId as string | undefined;
+      if (uid) {
+        untrackUserConnection(uid, socket);
+      }
     });
 
     // Send a welcome message

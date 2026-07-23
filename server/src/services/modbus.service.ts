@@ -233,7 +233,7 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
       errorCount++;
       const msg = (err as Error).message;
       // Comm errors / exception responses from the slave simulator are expected ~2% of the time
-      const isTransient = msg.includes('failure') || msg.includes('Exception') || msg.includes('CRC') || msg.includes('Timed out');
+      const isTransient = msg.includes('failure') || msg.includes('Exception') || msg.includes('CRC') || msg.includes('Timed out') || msg.includes('out of range') || msg.includes('Invalid Modbus');
       if (isTransient) {
         console.warn(`[Modbus] ⚠️  Poll error (${errorCount}): ${msg}`);
       } else {
@@ -259,10 +259,6 @@ export async function startModbusPoller(config: ModbusPollerConfig): Promise<voi
   };
 
   if (!initialConnected) {
-    if (pollTimerId !== null) clearTimeout(pollTimerId);
-    pollStopped = true;
-    stopModbusPoller = null;
-    try { client.close(() => {}); } catch (_) {}
     throw new Error(`[Modbus] Failed to connect on initial attempt`);
   }
 }

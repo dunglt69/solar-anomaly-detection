@@ -3,6 +3,7 @@ import { users, activityLog, registeredDevices, sessions } from '../db/schema.js
 import { eq, desc, count, and, gte, lte, inArray, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import * as argon2 from 'argon2';
+import { closeUserConnections } from './wsConnections.js';
 
 // ─── Employee ID generation ─────────────────────────────────────────
 
@@ -10,34 +11,19 @@ import * as argon2 from 'argon2';
  * Generate the next sequential employee ID (EM-0001, EM-0002, etc.)
  */
 export async function generateEmployeeId(): Promise<string> {
-  const MAX_RETRIES = 5;
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const [lastUser] = await db.select({ employeeId: users.employeeId })
-      .from(users)
-      .orderBy(desc(users.employeeId))
-      .limit(1);
+  // Atomic approach: SELECT MAX + return next. UNIQUE constraint on employeeId
+  // ensures no duplicates even under concurrent access (CRIT-003).
+  const [lastUser] = await db.select({ employeeId: users.employeeId })
+    .from(users)
+    .orderBy(desc(users.employeeId))
+    .limit(1);
 
-    let nextNum: number;
-    if (!lastUser || !lastUser.employeeId) {
-      nextNum = 1;
-    } else {
-      const match = lastUser.employeeId.match(/^EM-(\d+)$/);
-      nextNum = match ? parseInt(match[1]!, 10) + 1 : 1;
-    }
-
-    nextNum += attempt;
-    const candidateId = `EM-${String(nextNum).padStart(4, '0')}`;
-
-    const [existing] = await db.select({ id: users.id })
-      .from(users)
-      .where(eq(users.employeeId, candidateId))
-      .limit(1);
-
-    if (!existing) {
-      return candidateId;
-    }
+  let nextNum = 1;
+  if (lastUser?.employeeId) {
+    const match = lastUser.employeeId.match(/^EM-(\d+)$/);
+    nextNum = match ? parseInt(match[1]!, 10) + 1 : 1;
   }
-  throw new Error('Failed to generate unique employee ID after retries');
+  return `EM-${String(nextNum).padStart(4, '0')}`;
 }
 
 // ─── List users ─────────────────────────────────────────────────────
@@ -90,21 +76,34 @@ export async function createUser(data: {
   });
 
   const id = nanoid();
-  const employeeId = await generateEmployeeId();
 
-  await db.insert(users).values({
-    id,
-    employeeId,
-    username: data.username,
-    email: data.email,
-    personalEmail: data.personalEmail,
-    dob: data.dob,
-    displayName: data.displayName,
-    passwordHash,
-    role: data.role,
-  });
-
-  return { id, employeeId, username: data.username, email: data.email, personalEmail: data.personalEmail, dob: data.dob, displayName: data.displayName, role: data.role };
+  // Retry loop to handle UNIQUE constraint race on employeeId (CRIT-003)
+  const MAX_RETRIES = 5;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const employeeId = await generateEmployeeId();
+    try {
+      await db.insert(users).values({
+        id,
+        employeeId,
+        username: data.username,
+        email: data.email,
+        personalEmail: data.personalEmail,
+        dob: data.dob,
+        displayName: data.displayName,
+        passwordHash,
+        role: data.role,
+      });
+      return { id, employeeId, username: data.username, email: data.email, personalEmail: data.personalEmail, dob: data.dob, displayName: data.displayName, role: data.role };
+    } catch (err: any) {
+      // Retry on UNIQUE constraint violation for employeeId
+      if (err.message?.includes('UNIQUE constraint') && err.message?.includes('employee_id')) {
+        if (attempt === MAX_RETRIES - 1) throw new Error('Failed to generate unique employee ID after retries');
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error('Failed to create user after retries');
 }
 
 // ─── Update user ────────────────────────────────────────────────────
@@ -116,7 +115,7 @@ export async function updateUser(id: string, data: {
   role?: 'admin' | 'solar_operator' | 'security_engineer';
   password?: string;
 }) {
-  const setData: Record<string, any> = { updatedAt: new Date() };
+  const setData: Partial<typeof users.$inferInsert> = { updatedAt: new Date() };
   if (data.displayName !== undefined) setData.displayName = data.displayName;
   if (data.email !== undefined) setData.email = data.email;
   if (data.personalEmail !== undefined) setData.personalEmail = data.personalEmail;
@@ -129,6 +128,9 @@ export async function updateUser(id: string, data: {
       timeCost: 2,
       parallelism: 1,
     });
+    // Revoke all sessions when admin resets password (HIGH-006)
+    await db.delete(sessions).where(eq(sessions.userId, id));
+    closeUserConnections(id);
   }
 
   await db.update(users).set(setData).where(eq(users.id, id));
@@ -163,7 +165,7 @@ export async function queryActivityLog(q: ActivityLogQuery) {
   if (q.from) conditions.push(gte(activityLog.timestamp, new Date(q.from)));
   if (q.to) conditions.push(lte(activityLog.timestamp, new Date(q.to)));
   if (q.actorId) conditions.push(eq(activityLog.actorId, q.actorId));
-  if (q.action) conditions.push(eq(activityLog.action, q.action as any));
+  if (q.action) conditions.push(eq(activityLog.action, q.action as typeof activityLog.action.enumValues[number]));
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
   const limit = Math.min(q.limit || 50, 200);
@@ -250,7 +252,7 @@ export async function writeActivityLog(entry: {
   await db.insert(activityLog).values({
     actorId: entry.actorId || null,
     actorRole: entry.actorRole,
-    action: entry.action as any,
+    action: entry.action as typeof activityLog.action.enumValues[number],
     target: entry.target || null,
     details: entry.details || null,
     ip: entry.ip || null,

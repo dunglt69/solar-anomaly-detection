@@ -118,9 +118,9 @@ function addRatioFeatures(baseFeatures: number[]): number[] {
 
   const thresh = 1e-6;
 
-  // Safe ratio: only compute where denominator > threshold, else 1.0
-  let vdcRatio = vdc2 > thresh ? vdc1 / vdc2 : 1.0;
-  let idcRatio = idc2 > thresh ? idc1 / idc2 : 1.0;
+  // Safe ratio: only compute where |denominator| > threshold, else 1.0
+  let vdcRatio = Math.abs(vdc2) > thresh ? vdc1 / vdc2 : 1.0;
+  let idcRatio = Math.abs(idc2) > thresh ? idc1 / idc2 : 1.0;
 
   // Clamp to [0, 5]
   vdcRatio = Math.max(0, Math.min(5, vdcRatio));
@@ -137,6 +137,7 @@ class AIInferenceService {
   private session: ort.InferenceSession | null = null;
   private scaler: ScalerParams | null = null;
   private windowBuffers: Map<string, number[][]> = new Map();
+  private static readonly MAX_STREAMS = 100;
   private loaded = false;
 
   get isLoaded(): boolean {
@@ -265,6 +266,11 @@ class AIInferenceService {
     // Add to stream-specific window buffer
     let buffer = this.windowBuffers.get(streamId);
     if (!buffer) {
+      // Evict oldest stream if at capacity (MED-014: prevent unbounded growth)
+      if (this.windowBuffers.size >= AIInferenceService.MAX_STREAMS) {
+        const oldest = this.windowBuffers.keys().next().value!;
+        this.windowBuffers.delete(oldest);
+      }
       buffer = [];
       this.windowBuffers.set(streamId, buffer);
     }

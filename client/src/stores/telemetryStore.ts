@@ -409,8 +409,16 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
 
     try {
       const token = useAuthStore.getState().accessToken;
-      if (!token) return;
-      const wsUrlWithToken = `${WS_URL}?token=${encodeURIComponent(token)}`;
+      if (!token) {
+        if (!reconnectTimer && !isIntentionallyClosed) {
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            get().connectWebSocket();
+          }, 500);
+        }
+        return;
+      }
+      const wsUrlWithToken = `${getWsUrl()}?token=${encodeURIComponent(token)}`;
       ws = new WebSocket(wsUrlWithToken);
 
       ws.onopen = () => {

@@ -11,6 +11,7 @@ import {
   logDeviceRejection,
   type HardwareSignature,
 } from './deviceBinding.service.js';
+import { closeUserConnections } from './wsConnections.js';
 import crypto from 'node:crypto';
 
 const JWT_SECRET_RAW = process.env['JWT_SECRET'];
@@ -26,6 +27,16 @@ const ACCESS_TOKEN_TTL = '15m';
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 30 * 60 * 1000; // 30 min
+
+// Pre-computed Argon2id hash used for constant-time verification on
+// non-existent users (CRIT-002: timing attack mitigation).
+// Generated once at module load with the same Argon2 settings as real passwords.
+const DUMMY_HASH = argon2.hash('dummy-password-for-timing', {
+  type: argon2.argon2id,
+  memoryCost: 19456,
+  timeCost: 2,
+  parallelism: 1,
+});
 
 interface TokenPair {
   accessToken: string;
@@ -64,29 +75,22 @@ export async function login(
   const [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
 
   if (!user) {
-    // Perform dummy Argon2id verification to mitigate timing attacks (user enumeration)
-    await argon2.verify(
-      '$argon2id$v=19$m=19456,t=2,p=1$dummyhashdummyhashdummyha$dummyhashdummyhashdummyhashdummyhashdummyha',
-      'dummypassword'
-    );
+    // Verify against dummy hash to produce identical timing as real password check
+    // (CRIT-002: timing attack mitigation + DoS prevention via verify instead of hash)
+    await argon2.verify(await DUMMY_HASH, password).catch(() => {});
     await logActivity(null, 'system', 'LOGIN_FAILED', `user:${username}`, { reason: 'not_found' }, ip, userAgent);
     throw new AuthError('Invalid credentials', 401);
   }
 
   // Check lockout
   if (user.lockedUntil && user.lockedUntil > new Date()) {
-    // Perform dummy verification even on lockout to keep timings uniform
-    await argon2.verify(
-      '$argon2id$v=19$m=19456,t=2,p=1$dummyhashdummyhashdummyha$dummyhashdummyhashdummyhashdummyhashdummyha',
-      'dummypassword'
-    );
+    // Verify against dummy hash to keep timings uniform (CRIT-002)
+    await argon2.verify(await DUMMY_HASH, password).catch(() => {});
     const remaining = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
     const fingerprint = hwSignature ? `hw-${hwSignature.cpuCores}-${hwSignature.platform || 'unknown'}-${hwSignature.timezone || 'unknown'}` : null;
     await logActivity(user.id, user.role, 'LOGIN_FAILED', `user:${username}`, {
       reason: 'locked',
       remaining,
-      browser: deviceInfo?.browser || null,
-      os: deviceInfo?.os || null,
       fingerprint,
       deviceInfo: { browser: deviceInfo?.browser || null, os: deviceInfo?.os || null },
       hwInfo: hwSignature || null
@@ -107,8 +111,6 @@ export async function login(
     await logActivity(user.id, user.role, 'LOGIN_FAILED', `user:${username}`, {
       reason: 'wrong_password',
       attempts,
-      browser: deviceInfo?.browser || null,
-      os: deviceInfo?.os || null,
       fingerprint,
       deviceInfo: { browser: deviceInfo?.browser || null, os: deviceInfo?.os || null },
       hwInfo: hwSignature || null
@@ -130,8 +132,6 @@ export async function login(
         const fingerprint = `hw-${hwSignature.cpuCores}-${hwSignature.platform || 'unknown'}-${hwSignature.timezone || 'unknown'}`;
         await logActivity(user.id, user.role, 'LOGIN_FAILED', `user:${username}`, {
           reason: 'unregistered_device',
-          browser: deviceInfo?.browser || null,
-          os: deviceInfo?.os || null,
           fingerprint,
           deviceInfo: { browser: deviceInfo?.browser || null, os: deviceInfo?.os || null },
           hwInfo: hwSignature
@@ -146,8 +146,6 @@ export async function login(
         await logActivity(user.id, user.role, 'LOGIN_FAILED', `user:${username}`, {
           reason: 'device_rejected',
           detail: validation.reason,
-          browser: deviceInfo?.browser || null,
-          os: deviceInfo?.os || null,
           fingerprint,
           deviceInfo: { browser: deviceInfo?.browser || null, os: deviceInfo?.os || null },
           hwInfo: hwSignature
@@ -183,8 +181,6 @@ export async function login(
   const fingerprint = hwSignature ? `hw-${hwSignature.cpuCores}-${hwSignature.platform || 'unknown'}-${hwSignature.timezone || 'unknown'}` : null;
   await logActivity(user.id, user.role, 'LOGIN', `user:${user.id}`, {
     deviceRegistered,
-    browser: deviceInfo?.browser || null,
-    os: deviceInfo?.os || null,
     fingerprint,
     deviceInfo: { browser: deviceInfo?.browser || null, os: deviceInfo?.os || null },
     hwInfo: hwSignature || null
@@ -226,7 +222,7 @@ export async function refresh(
   if (session.revoked) {
     console.warn(`[Auth] SECURITY: Refresh token reuse detected for user ${session.userId}, family ${session.tokenFamily}. Revoking all tokens in family.`);
     await db.delete(sessions).where(eq(sessions.tokenFamily, session.tokenFamily));
-    await logActivity(session.userId, 'system' as any, 'TOKEN_REUSE_DETECTED', `user:${session.userId}`, {
+    await logActivity(session.userId, 'system', 'TOKEN_REUSE_DETECTED', `user:${session.userId}`, {
       tokenFamily: session.tokenFamily,
       revoked: true,
     }, ip, userAgent);
@@ -251,6 +247,9 @@ export async function logout(refreshToken: string, userId: string, ip: string, u
   if (session) {
     await db.delete(sessions).where(eq(sessions.tokenFamily, session.tokenFamily));
   }
+
+  // Close all WebSocket connections for this user (HIGH-001)
+  closeUserConnections(userId);
 
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   await logActivity(userId, user?.role || 'solar_operator', 'LOGOUT', `user:${userId}`, null, ip, userAgent);
@@ -332,7 +331,7 @@ async function logActivity(
   await db.insert(activityLog).values({
     actorId,
     actorRole,
-    action: action as 'LOGIN',
+    action: action as typeof activityLog.action.enumValues[number],
     target,
     details: details as Record<string, unknown> | null,
     ip,
@@ -360,6 +359,12 @@ export async function verifyAndChangePassword(
   });
 
   await db.update(users).set({ passwordHash: newHash, updatedAt: new Date() }).where(eq(users.id, userId));
+
+  // Revoke all sessions after password change (CRIT-004)
+  await db.delete(sessions).where(eq(sessions.userId, userId));
+
+  // Close all WebSocket connections for this user
+  closeUserConnections(userId);
 }
 
 export class AuthError extends Error {
