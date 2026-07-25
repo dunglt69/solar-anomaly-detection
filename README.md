@@ -34,7 +34,6 @@
       title        = {Web-based Real-time Monitoring, Fault Detection and Classification for Solar PV Systems using Convolutional Neural Networks},
       year         = {2026},
       publisher    = {GitHub},
-      journal      = {GitHub Repository},
       howpublished = {\url{https://github.com/dunglt69/solar-anomaly-detection}}
     }
     ```
