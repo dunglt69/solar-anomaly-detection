@@ -403,8 +403,6 @@ Compare the output string against the official release metadata sheet to verify 
 *   **Citation:** H. I. Fawaz et al., *"InceptionTime: Finding AlexNet for Time Series Classification,"* Data Mining and Knowledge Discovery, vol. 34, no. 6, pp. 1936–1962, 2020, doi: [10.1007/s10618-020-00710-y](https://doi.org/10.1007/s10618-020-00710-y).
 *   **Context:** Outlines the parallel multi-scale 1D convolution architecture used to build the deep learning model.
 
-### 8.3 Modulo-Based Downsampling
-*   **Context:** The backend uses a modulo-based row sampling strategy to downsample large telemetry query results, preserving temporal distribution while reducing payload size for frontend chart rendering.
 
 ---
 
