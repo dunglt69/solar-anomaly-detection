@@ -36,7 +36,7 @@
     "jose": "^6.2.3",
     "modbus-serial": "^8.0.25",
     "nanoid": "^6.0.0",
-    "onnxruntime-node": "^1.26.0",
+    "onnxruntime-node": "^1.30.0",
     "ws": "^8.21.0"
   },
   "devDependencies": {
