@@ -19,7 +19,9 @@
   <img src="https://img.shields.io/badge/SQLite-WAL-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
   <img src="https://img.shields.io/badge/License-Apache--2.0-blue?style=for-the-badge&logo=apache" alt="License: Apache-2.0">
 </p>
-
+<p align="center">
+  <img src="https://visitor-badge.laobi.icu/badge?page_id=dunglt69.solar-anomaly-detection" alt="Visitors" />
+</p>
 ---
 
 ## 1. Author & Academic Affiliation
